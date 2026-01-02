@@ -1,21 +1,19 @@
 import { Star, ArrowLeft, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import AlertDialog from './AlertDialog';
 
 export function MinhasAvaliacoes({ navegarPara }) {
   const [avaliacoes, setAvaliacoes] = useState([]);
 
-  useEffect(() => {
-    // TODO: Conectar com seu backend Node/Express
-    // Exemplo de chamada:
-    // const buscarAvaliacoes = async () => {
-    //   const resposta = await fetch('http://localhost:3000/avaliacoes', {
-    //     headers: { 'Authorization': 'Bearer SEU_TOKEN' }
-    //   });
-    //   const dados = await resposta.json();
-    //   setAvaliacoes(dados);
-    // };
-    // buscarAvaliacoes();
+  // Estado para controlar o Dialog
+  const [dialog, setDialog] = useState({
+    aberto: false,
+    mensagem: '',
+    tipo: 'alerta', // 'alerta' ou 'confirmacao'
+    idParaExcluir: null
+  });
 
+  useEffect(() => {
     // Mock de avaliações para demonstração
     const avaliacoesMock = [
       {
@@ -60,19 +58,36 @@ export function MinhasAvaliacoes({ navegarPara }) {
     return ((av.notaPreco + av.notaTempoExecucao + av.notaHigiene + av.notaEducacao) / 4).toFixed(1);
   };
 
-  const excluirAvaliacao = async (id) => {
-    if (!confirm('Tem certeza que deseja excluir esta avaliação?')) {
-      return;
-    }
+  // Abre o modal perguntando se quer excluir
+  const solicitarExclusao = (id) => {
+    setDialog({
+      aberto: true,
+      mensagem: 'Tem certeza que deseja excluir esta avaliação?',
+      tipo: 'confirmacao',
+      idParaExcluir: id
+    });
+  };
 
-    // TODO: Conectar com seu backend Node/Express
-    // const resposta = await fetch(`http://localhost:3000/avaliacoes/${id}`, {
-    //   method: 'DELETE',
-    //   headers: { 'Authorization': 'Bearer SEU_TOKEN' }
-    // });
+  // Executa a exclusão de fato
+  const confirmarExclusao = async () => {
+    const id = dialog.idParaExcluir;
 
+    // Remove do estado local
     setAvaliacoes(avaliacoes.filter(av => av.id !== id));
-    alert('Avaliação excluída com sucesso!');
+
+    // Abre modal de sucesso (reaproveitando o estado, mas limpando o ID)
+    setTimeout(() => {
+      setDialog({
+        aberto: true,
+        mensagem: 'Avaliação excluída com sucesso!',
+        tipo: 'alerta',
+        idParaExcluir: null
+      });
+    }, 100);
+  };
+
+  const fecharDialog = () => {
+    setDialog({ ...dialog, aberto: false });
   };
 
   return (
@@ -132,7 +147,7 @@ export function MinhasAvaliacoes({ navegarPara }) {
                           Avaliado em {new Date(avaliacao.dataAvaliacao).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
-                      
+
                       <div className="d-flex align-items-center gap-3">
                         <div className="d-flex align-items-center gap-2">
                           <Star size={24} fill="var(--amarelo)" color="var(--amarelo)" />
@@ -141,7 +156,7 @@ export function MinhasAvaliacoes({ navegarPara }) {
                           </span>
                         </div>
                         <button
-                          onClick={() => excluirAvaliacao(avaliacao.id)}
+                          onClick={() => solicitarExclusao(avaliacao.id)}
                           className="btn btn-outline-danger btn-sm"
                           title="Excluir avaliação"
                         >
@@ -154,56 +169,40 @@ export function MinhasAvaliacoes({ navegarPara }) {
                     <div className="row g-2 mb-3">
                       <div className="col-6 col-md-3">
                         <div className="text-center p-3 rounded bg-azul-claro">
-                          <p className="small text-azul-marinho mb-1">
-                            Preço
-                          </p>
+                          <p className="small text-azul-marinho mb-1">Preço</p>
                           <div className="d-flex align-items-center justify-content-center gap-1">
                             <Star size={16} fill="var(--amarelo)" color="var(--amarelo)" />
-                            <span className="text-azul-marinho">
-                              {avaliacao.notaPreco}
-                            </span>
+                            <span className="text-azul-marinho">{avaliacao.notaPreco}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="col-6 col-md-3">
                         <div className="text-center p-3 rounded bg-azul-claro">
-                          <p className="small text-azul-marinho mb-1">
-                            Tempo
-                          </p>
+                          <p className="small text-azul-marinho mb-1">Tempo</p>
                           <div className="d-flex align-items-center justify-content-center gap-1">
                             <Star size={16} fill="var(--amarelo)" color="var(--amarelo)" />
-                            <span className="text-azul-marinho">
-                              {avaliacao.notaTempoExecucao}
-                            </span>
+                            <span className="text-azul-marinho">{avaliacao.notaTempoExecucao}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="col-6 col-md-3">
                         <div className="text-center p-3 rounded bg-azul-claro">
-                          <p className="small text-azul-marinho mb-1">
-                            Higiene
-                          </p>
+                          <p className="small text-azul-marinho mb-1">Higiene</p>
                           <div className="d-flex align-items-center justify-content-center gap-1">
                             <Star size={16} fill="var(--amarelo)" color="var(--amarelo)" />
-                            <span className="text-azul-marinho">
-                              {avaliacao.notaHigiene}
-                            </span>
+                            <span className="text-azul-marinho">{avaliacao.notaHigiene}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="col-6 col-md-3">
                         <div className="text-center p-3 rounded bg-azul-claro">
-                          <p className="small text-azul-marinho mb-1">
-                            Educação
-                          </p>
+                          <p className="small text-azul-marinho mb-1">Educação</p>
                           <div className="d-flex align-items-center justify-content-center gap-1">
                             <Star size={16} fill="var(--amarelo)" color="var(--amarelo)" />
-                            <span className="text-azul-marinho">
-                              {avaliacao.notaEducacao}
-                            </span>
+                            <span className="text-azul-marinho">{avaliacao.notaEducacao}</span>
                           </div>
                         </div>
                       </div>
@@ -236,47 +235,43 @@ export function MinhasAvaliacoes({ navegarPara }) {
         {avaliacoes.length > 0 && (
           <div className="card bg-azul-claro mt-4">
             <div className="card-body p-4">
-              <h3 className="text-azul-marinho mb-4">
-                Estatísticas
-              </h3>
+              <h3 className="text-azul-marinho mb-4">Estatísticas</h3>
               <div className="row g-4 text-center">
                 <div className="col-6 col-md-3">
-                  <p className="display-4 text-azul-marinho mb-1">
-                    {avaliacoes.length}
-                  </p>
-                  <p className="small text-cinza mb-0">
-                    Total de avaliações
-                  </p>
+                  <p className="display-4 text-azul-marinho mb-1">{avaliacoes.length}</p>
+                  <p className="small text-cinza mb-0">Total de avaliações</p>
                 </div>
                 <div className="col-6 col-md-3">
                   <p className="display-4 text-azul-marinho mb-1">
                     {(avaliacoes.reduce((acc, av) => acc + parseFloat(calcularNotaMedia(av)), 0) / avaliacoes.length).toFixed(1)}
                   </p>
-                  <p className="small text-cinza mb-0">
-                    Nota média
-                  </p>
+                  <p className="small text-cinza mb-0">Nota média</p>
                 </div>
                 <div className="col-6 col-md-3">
                   <p className="display-4 text-azul-marinho mb-1">
                     {(avaliacoes.reduce((acc, av) => acc + av.notaPreco, 0) / avaliacoes.length).toFixed(1)}
                   </p>
-                  <p className="small text-cinza mb-0">
-                    Média preço
-                  </p>
+                  <p className="small text-cinza mb-0">Média preço</p>
                 </div>
                 <div className="col-6 col-md-3">
                   <p className="display-4 text-azul-marinho mb-1">
                     {avaliacoes.filter(av => parseFloat(calcularNotaMedia(av)) >= 4.5).length}
                   </p>
-                  <p className="small text-cinza mb-0">
-                    Avaliações 4.5+
-                  </p>
+                  <p className="small text-cinza mb-0">Avaliações 4.5+</p>
                 </div>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* COMPONENTE ALERT DIALOG ADICIONADO */}
+      <AlertDialog
+        aberto={dialog.aberto}
+        mensagem={dialog.mensagem}
+        onClose={fecharDialog}
+        onConfirm={dialog.tipo === 'confirmacao' ? confirmarExclusao : null}
+      />
     </div>
   );
 }

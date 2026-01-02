@@ -1,11 +1,15 @@
 import { Star, Phone, Mail, Calendar, Heart, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import AlertDialog from './AlertDialog';
 
 export function DetalheServico({ idServico, navegarPara, estaLogado }) {
   const [servico, setServico] = useState(null);
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [mostrarFormularioAvaliacao, setMostrarFormularioAvaliacao] = useState(false);
   const [ehFavorito, setEhFavorito] = useState(false);
+
+  // Estados para Dialog
+  const [dialog, setDialog] = useState({ aberto: false, mensagem: '', acaoAposFechar: null });
 
   const [novaAvaliacao, setNovaAvaliacao] = useState({
     notaPreco: 5,
@@ -15,15 +19,18 @@ export function DetalheServico({ idServico, navegarPara, estaLogado }) {
     comentario: ''
   });
 
-  useEffect(() => {
-    // TODO: Conectar com seu backend Node/Express
-    // const buscarServico = async () => {
-    //   const resposta = await fetch(`http://localhost:3000/servico/${idServico}`);
-    //   const dados = await resposta.json();
-    //   setServico(dados);
-    // };
-    // buscarServico();
+  const abrirDialog = (msg, callback = null) => {
+    setDialog({ aberto: true, mensagem: msg, acaoAposFechar: callback });
+  };
 
+  const fecharDialog = () => {
+    setDialog({ ...dialog, aberto: false });
+    if (dialog.acaoAposFechar) {
+      dialog.acaoAposFechar();
+    }
+  };
+
+  useEffect(() => {
     // Mock de dados para demonstração
     const servicoMock = {
       id: idServico,
@@ -69,40 +76,22 @@ export function DetalheServico({ idServico, navegarPara, estaLogado }) {
 
   const realizarContratacao = async () => {
     if (!estaLogado) {
-      //alert('Você precisa estar logado para contratar um serviço');
-      <dialog>Você precisa estar logado para contratar um serviço</dialog>
-      navegarPara('login');
+      abrirDialog('Você precisa estar logado para contratar um serviço', () => navegarPara('login'));
       return;
     }
 
-    // TODO: Conectar com seu backend Node/Express
-    // const resposta = await fetch(`http://localhost:3000/servico/${idServico}/contratar`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' }
-    // });
-
-    alert('Solicitação de contratação enviada! O profissional entrará em contato em breve.');
+    abrirDialog('Solicitação de contratação enviada! O profissional entrará em contato em breve.');
   };
 
   const submeterAvaliacao = async (e) => {
     e.preventDefault();
 
     if (!estaLogado) {
-      alert('Você precisa estar logado para avaliar um serviço');
+      abrirDialog('Você precisa estar logado para avaliar um serviço');
       return;
     }
 
-    // TODO: Conectar com seu backend Node/Express
-    // const resposta = await fetch(`http://localhost:3000/avaliacoes`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     idServico: idServico,
-    //     ...novaAvaliacao
-    //   })
-    // });
-
-    alert('Avaliação enviada com sucesso!');
+    abrirDialog('Avaliação enviada com sucesso!');
     setMostrarFormularioAvaliacao(false);
     setNovaAvaliacao({
       notaPreco: 5,
@@ -115,7 +104,7 @@ export function DetalheServico({ idServico, navegarPara, estaLogado }) {
 
   const alternarFavorito = () => {
     if (!estaLogado) {
-      alert('Você precisa estar logado para favoritar serviços');
+      abrirDialog('Você precisa estar logado para favoritar serviços');
       return;
     }
     setEhFavorito(!ehFavorito);
@@ -402,6 +391,12 @@ export function DetalheServico({ idServico, navegarPara, estaLogado }) {
           )}
         </div>
       </section>
+
+      <AlertDialog
+        aberto={dialog.aberto}
+        mensagem={dialog.mensagem}
+        onClose={fecharDialog}
+      />
     </div>
   );
 }

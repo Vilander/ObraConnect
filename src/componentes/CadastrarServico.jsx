@@ -11,40 +11,16 @@ export function CadastrarServico({ navegarPara }) {
     categoriasSelecionadas: []
   });
 
-  const [dialogAberto, setDialogAberto] = useState(false);
-  const [mensagemDialog, setMensagemDialog] = useState('');
+  const [dialogState, setDialogState] = useState({ aberto: false, mensagem: '', sucesso: false });
 
   const categoriasDisponiveis = [
-    'Arquiteto(a)',
-    'Armador(a) de Ferragens',
-    'Azulejista / Pisagista',
-    'Bombeiro(a) Hidráulico / Encanador(a)',
-    'Calheiro(a)',
-    'Carpinteiro(a)',
-    'Desentupidor(a)',
-    'Designer de Interiores',
-    'Eletricista',
-    'Engenheiro(a) Civil',
-    'Gesseiro(a)',
-    'Impermeabilizador(a)',
-    'Instalador(a) de Ar Condicionado',
-    'Instalador(a) de Drywall',
-    'Instalador(a) de Gás',
-    'Instalador(a) de Sistemas de Segurança',
-    'Jardineiro(a) / Paisagista',
-    'Limpador(a) Pós-Obra',
-    'Marceneiro(a)',
-    'Marido de Aluguel',
-    'Mestre de Obras',
-    'Montador(a) de Andaimes',
-    'Montador(a) de Móveis',
-    'Terraplanagem',
-    'Pedreiro(a)',
-    'Pintor(a)',
-    'Serralheiro(a)',
-    'Técnico(a) em Edificações',
-    'Topógrafo(a)',
-    'Vidraceiro(a)'
+    'Arquiteto(a)', 'Armador(a) de Ferragens', 'Azulejista / Pisagista', 'Bombeiro(a) Hidráulico / Encanador(a)',
+    'Calheiro(a)', 'Carpinteiro(a)', 'Desentupidor(a)', 'Designer de Interiores', 'Eletricista',
+    'Engenheiro(a) Civil', 'Gesseiro(a)', 'Impermeabilizador(a)', 'Instalador(a) de Ar Condicionado',
+    'Instalador(a) de Drywall', 'Instalador(a) de Gás', 'Instalador(a) de Sistemas de Segurança',
+    'Jardineiro(a) / Paisagista', 'Limpador(a) Pós-Obra', 'Marceneiro(a)', 'Marido de Aluguel',
+    'Mestre de Obras', 'Montador(a) de Andaimes', 'Montador(a) de Móveis', 'Terraplanagem',
+    'Pedreiro(a)', 'Pintor(a)', 'Serralheiro(a)', 'Técnico(a) em Edificações', 'Topógrafo(a)', 'Vidraceiro(a)'
   ];
 
   const alternarCategoria = (categoria) => {
@@ -60,23 +36,26 @@ export function CadastrarServico({ navegarPara }) {
     e.preventDefault();
 
     if (dadosFormulario.categoriasSelecionadas.length === 0) {
-      setMensagemDialog('Por favor, selecione pelo menos uma categoria');
-      setDialogAberto(true);
+      setDialogState({
+        aberto: true,
+        mensagem: 'Por favor, selecione pelo menos uma categoria',
+        sucesso: false
+      });
       return;
     }
 
-    // TODO: Conectar com seu backend Node/Express
-    // Exemplo de chamada:
-    // const resposta = await fetch('http://localhost:3000/servicos/cadastrar', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(dadosFormulario)
-    // });
-    // const dados = await resposta.json();
+    setDialogState({
+      aberto: true,
+      mensagem: 'Serviço cadastrado com sucesso!',
+      sucesso: true
+    });
+  };
 
-    setMensagemDialog('Serviço cadastrado com sucesso!');
-    setDialogAberto(true);
-    navegarPara('inicio');
+  const handleCloseDialog = () => {
+    setDialogState({ ...dialogState, aberto: false });
+    if (dialogState.sucesso) {
+      navegarPara('inicio');
+    }
   };
 
   return (
@@ -238,15 +217,9 @@ export function CadastrarServico({ navegarPara }) {
           </div>
         </div>
         <AlertDialog
-          aberto={dialogAberto}
-          mensagem={mensagemDialog}
-          onClose={() => {
-            setDialogAberto(false);
-
-            if (mensagemDialog === 'Serviço cadastrado com sucesso!') {
-              navegarPara('inicio');
-            }
-          }}
+          aberto={dialogState.aberto}
+          mensagem={dialogState.mensagem}
+          onClose={handleCloseDialog}
         />
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { Search, Star, Heart, Filter, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import AlertDialog from './AlertDialog';
 
 export function Inicio({ navegarPara, estaLogado }) {
   const [servicos, setServicos] = useState([]);
@@ -8,6 +9,9 @@ export function Inicio({ navegarPara, estaLogado }) {
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('');
   const [favoritos, setFavoritos] = useState([]);
   const [mostrarFiltrosMobile, setMostrarFiltrosMobile] = useState(false);
+
+  // Estado Dialog
+  const [dialog, setDialog] = useState({ aberto: false, mensagem: '' });
 
   const categorias = [
     'Arquiteto(a)',
@@ -43,15 +47,6 @@ export function Inicio({ navegarPara, estaLogado }) {
   ];
 
   useEffect(() => {
-    // TODO: Conectar com seu backend Node/Express
-    // Exemplo de chamada:
-    // const buscarServicos = async () => {
-    //   const resposta = await fetch('http://localhost:3000/servicos');
-    //   const dados = await resposta.json();
-    //   setServicos(dados);
-    // };
-    // buscarServicos();
-
     // Mock de serviços para demonstração
     const servicosMock = [
       {
@@ -144,16 +139,9 @@ export function Inicio({ navegarPara, estaLogado }) {
 
   const alternarFavorito = async (idServico) => {
     if (!estaLogado) {
-      alert('Você precisa estar logado para favoritar serviços');
+      setDialog({ aberto: true, mensagem: 'Você precisa estar logado para favoritar serviços' });
       return;
     }
-
-    // TODO: Conectar com seu backend Node/Express
-    // const resposta = await fetch('http://localhost:3000/favoritos', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ idServico: idServico })
-    // });
 
     setFavoritos(anterior =>
       anterior.includes(idServico)
@@ -426,6 +414,12 @@ export function Inicio({ navegarPara, estaLogado }) {
           </div>
         </div>
       )}
+
+      <AlertDialog
+        aberto={dialog.aberto}
+        mensagem={dialog.mensagem}
+        onClose={() => setDialog({ ...dialog, aberto: false })}
+      />
     </div>
   );
 }

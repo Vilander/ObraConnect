@@ -114,10 +114,14 @@ export default function App() {
       <footer className="py-4 px-3 mt-5 border-top bg-azul-marinho">
         <div className="container text-center">
           <p className="text-branco mb-2">
-            © 2024 ObraConnect - Marketplace de Serviços de Construção Civil
+            © 2026 ObraConnect - Marketplace de Serviços de Construção Civil
           </p>
-          <p className="text-white-50 small mb-0">
+          <p className="text-white-50 fs-6 mb-0">
             Conectando profissionais qualificados com quem precisa
+          </p>
+          <br />
+          <p className="text-light small mb-0">
+            Desenvolvido por: Vilander Costa
           </p>
         </div>
       </footer>

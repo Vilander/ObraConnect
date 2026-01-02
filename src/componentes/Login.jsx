@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import { User, Lock, Mail, Phone, Eye, EyeOff } from 'lucide-react';
+import AlertDialog from './AlertDialog';
 
 export function Login({ realizarLogin }) {
   const [ehCadastro, setEhCadastro] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  
+
+  // Estado para controlar o Dialog
+  const [alerta, setAlerta] = useState({ aberto: false, mensagem: '' });
+
+  const mostrarAlerta = (msg) => setAlerta({ aberto: true, mensagem: msg });
+
   // Formulário de login
   const [dadosLogin, setDadosLogin] = useState({
     login: '',
@@ -23,52 +29,32 @@ export function Login({ realizarLogin }) {
 
   const submeterLogin = async (e) => {
     e.preventDefault();
-    
-    // TODO: Conectar com seu backend Node/Express
-    // Exemplo de chamada:
-    // const resposta = await fetch('http://localhost:3000/login', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(dadosLogin)
-    // });
-    // const dados = await resposta.json();
-    
-    // Mock de autenticação para demonstração
+
     if (dadosLogin.login && dadosLogin.senha) {
-      realizarLogin({ 
-        nome: 'Usuário Demo', 
-        email: 'usuario@demo.com' 
+      realizarLogin({
+        nome: 'Usuário Demo',
+        email: 'usuario@demo.com'
       });
     } else {
-      alert('Por favor, preencha todos os campos');
+      mostrarAlerta('Por favor, preencha todos os campos');
     }
   };
 
   const submeterCadastro = async (e) => {
     e.preventDefault();
-    
+
     if (dadosCadastro.senha !== dadosCadastro.confirmarSenha) {
-      alert('As senhas não coincidem');
+      mostrarAlerta('As senhas não coincidem');
       return;
     }
 
-    // TODO: Conectar com seu backend Node/Express
-    // Exemplo de chamada:
-    // const resposta = await fetch('http://localhost:3000/criar-conta', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(dadosCadastro)
-    // });
-    // const dados = await resposta.json();
-    
-    // Mock de registro para demonstração
     if (dadosCadastro.login && dadosCadastro.senha && dadosCadastro.nomeUsuario && dadosCadastro.email) {
-      realizarLogin({ 
-        nome: dadosCadastro.nomeUsuario, 
-        email: dadosCadastro.email 
+      realizarLogin({
+        nome: dadosCadastro.nomeUsuario,
+        email: dadosCadastro.email
       });
     } else {
-      alert('Por favor, preencha todos os campos obrigatórios');
+      mostrarAlerta('Por favor, preencha todos os campos obrigatórios');
     }
   };
 
@@ -82,8 +68,8 @@ export function Login({ realizarLogin }) {
               {ehCadastro ? 'Criar Conta' : 'Entrar'}
             </h1>
             <p className="text-cinza mt-2">
-              {ehCadastro 
-                ? 'Cadastre-se para acessar o marketplace' 
+              {ehCadastro
+                ? 'Cadastre-se para acessar o marketplace'
                 : 'Bem-vindo de volta ao ObraConnect'}
             </p>
           </div>
@@ -280,6 +266,12 @@ export function Login({ realizarLogin }) {
           )}
         </div>
       </div>
+
+      <AlertDialog
+        aberto={alerta.aberto}
+        mensagem={alerta.mensagem}
+        onClose={() => setAlerta({ ...alerta, aberto: false })}
+      />
     </div>
   );
 }

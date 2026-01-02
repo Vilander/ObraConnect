@@ -107,3 +107,77 @@
 .favorito {
   justify-self: center !important;
 }
+
+/* Estilo da caixa do Dialog */
+.alert-dialog {
+  /* Centraliza automaticamente na tela */
+  margin: auto;
+
+  /* Remove bordas padrões feias */
+  border: none;
+  border-radius: 12px;
+
+  /* Sombra para dar profundidade (efeito "flutuando") */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+  /* Tamanho */
+  max-width: 400px;
+  width: 90%;
+  padding: 0;
+  /* O padding será controlado pela div interna */
+  overflow: hidden;
+
+  /* Animação suave de entrada */
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* O ::backdrop é o fundo escuro atrás do dialog */
+.alert-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
+  /* Preto com 60% de opacidade */
+  backdrop-filter: blur(2px);
+  /* Opcional: desfoca levemente o fundo */
+  animation: fadeInBackdrop 0.3s ease-out;
+}
+
+/* Estilização interna para ficar bonito */
+.dialog-content {
+  padding: 24px;
+  text-align: center;
+  background-color: white;
+}
+
+.dialog-content p {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 24px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Animações (Opcional, mas dá um toque profissional) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
