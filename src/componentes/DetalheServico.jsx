@@ -69,7 +69,8 @@ export function DetalheServico({ idServico, navegarPara, estaLogado }) {
 
   const realizarContratacao = async () => {
     if (!estaLogado) {
-      alert('Você precisa estar logado para contratar um serviço');
+      //alert('Você precisa estar logado para contratar um serviço');
+      <dialog>Você precisa estar logado para contratar um serviço</dialog>
       navegarPara('login');
       return;
     }
@@ -159,7 +160,7 @@ export function DetalheServico({ idServico, navegarPara, estaLogado }) {
               />
               <button
                 onClick={alternarFavorito}
-                className="btn btn-light rounded-circle position-absolute shadow"
+                className="btn btn-light rounded-circle position-absolute shadow d-flex align-items-center justify-content-center"
                 style={{ top: '1rem', right: '1rem', width: '50px', height: '50px', padding: '0' }}
               >
                 <Heart

@@ -19,20 +19,47 @@
 /* 3. Estilos Personalizados (Sem @layer para ganharem do Bootstrap) */
 
 /* Cores de Texto */
-.text-azul-marinho { color: var(--azul-marinho) !important; }
-.text-laranja-principal { color: var(--laranja-principal) !important; }
-.text-cinza { color: var(--cinza) !important; }
-.text-branco { color: var(--branco) !important; }
-.text-amarelo { color: var(--amarelo) !important; }
-.text-marrom-escuro { color: var(--marrom-escuro) !important; }
+.text-azul-marinho {
+  color: var(--azul-marinho) !important;
+}
+
+.text-laranja-principal {
+  color: var(--laranja-principal) !important;
+}
+
+.text-cinza {
+  color: var(--cinza) !important;
+}
+
+.text-branco {
+  color: var(--branco) !important;
+}
+
+.text-amarelo {
+  color: var(--amarelo) !important;
+}
+
+.text-marrom-escuro {
+  color: var(--marrom-escuro) !important;
+}
 
 /* Cores de Fundo */
-.bg-azul-claro { background-color: var(--azul-claro) !important; }
-.bg-azul-marinho { background-color: var(--azul-marinho) !important; }
+.bg-azul-claro {
+  background-color: var(--azul-claro) !important;
+}
+
+.bg-azul-marinho {
+  background-color: var(--azul-marinho) !important;
+}
 
 /* Bordas */
-.border-azul-claro { border-color: var(--azul-claro) !important; }
-.border-azul-marinho { border-color: var(--azul-marinho) !important; }
+.border-azul-claro {
+  border-color: var(--azul-claro) !important;
+}
+
+.border-azul-marinho {
+  border-color: var(--azul-marinho) !important;
+}
 
 /* Botões - Forçamos a prioridade aqui */
 .btn-laranja {
@@ -40,6 +67,7 @@
   color: var(--branco) !important;
   border: none;
 }
+
 .btn-laranja:hover {
   background-color: var(--laranja-principal);
   filter: brightness(0.9);
@@ -51,6 +79,7 @@
   color: var(--branco) !important;
   border: none;
 }
+
 .btn-verde-escuro:hover {
   background-color: var(--verde-escuro);
   filter: brightness(0.9);
@@ -58,11 +87,23 @@
 }
 
 /* Utilitários Extras */
-.hover-opacity:hover { opacity: 0.8; }
-.object-cover { object-fit: cover; }
+.hover-opacity:hover {
+  opacity: 0.8;
+}
 
-.card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.object-cover {
+  object-fit: cover;
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
 .card-hover:hover {
   transform: translateY(-5px);
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+}
+
+.favorito {
+  justify-self: center !important;
 }

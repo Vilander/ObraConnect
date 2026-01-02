@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import AlertDialog from './AlertDialog';
 
 export function CadastrarServico({ navegarPara }) {
   const [dadosFormulario, setDadosFormulario] = useState({
@@ -9,6 +10,9 @@ export function CadastrarServico({ navegarPara }) {
     telefoneContato: '',
     categoriasSelecionadas: []
   });
+
+  const [dialogAberto, setDialogAberto] = useState(false);
+  const [mensagemDialog, setMensagemDialog] = useState('');
 
   const categoriasDisponiveis = [
     'Arquiteto(a)',
@@ -56,7 +60,8 @@ export function CadastrarServico({ navegarPara }) {
     e.preventDefault();
 
     if (dadosFormulario.categoriasSelecionadas.length === 0) {
-      alert('Por favor, selecione pelo menos uma categoria');
+      setMensagemDialog('Por favor, selecione pelo menos uma categoria');
+      setDialogAberto(true);
       return;
     }
 
@@ -69,7 +74,8 @@ export function CadastrarServico({ navegarPara }) {
     // });
     // const dados = await resposta.json();
 
-    alert('Serviço cadastrado com sucesso!');
+    setMensagemDialog('Serviço cadastrado com sucesso!');
+    setDialogAberto(true);
     navegarPara('inicio');
   };
 
@@ -125,11 +131,10 @@ export function CadastrarServico({ navegarPara }) {
                       <button
                         type="button"
                         onClick={() => alternarCategoria(categoria)}
-                        className={`btn w-100 py-2 text-start ${
-                          dadosFormulario.categoriasSelecionadas.includes(categoria)
-                            ? 'btn-laranja shadow'
-                            : 'btn-outline-secondary'
-                        }`}
+                        className={`btn w-100 py-2 text-start ${dadosFormulario.categoriasSelecionadas.includes(categoria)
+                          ? 'btn-laranja shadow'
+                          : 'btn-outline-secondary'
+                          }`}
                       >
                         {dadosFormulario.categoriasSelecionadas.includes(categoria) && (
                           <span className="me-1">✓</span>
@@ -232,6 +237,17 @@ export function CadastrarServico({ navegarPara }) {
             </ul>
           </div>
         </div>
+        <AlertDialog
+          aberto={dialogAberto}
+          mensagem={mensagemDialog}
+          onClose={() => {
+            setDialogAberto(false);
+
+            if (mensagemDialog === 'Serviço cadastrado com sucesso!') {
+              navegarPara('inicio');
+            }
+          }}
+        />
       </div>
     </div>
   );

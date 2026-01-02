@@ -125,7 +125,7 @@ export function Inicio({ navegarPara, estaLogado }) {
 
     // Filtrar por categoria
     if (categoriaSelecionada) {
-      filtrados = filtrados.filter(servico => 
+      filtrados = filtrados.filter(servico =>
         servico.categorias.includes(categoriaSelecionada)
       );
     }
@@ -294,7 +294,7 @@ export function Inicio({ navegarPara, estaLogado }) {
                                 e.stopPropagation();
                                 alternarFavorito(servico.id);
                               }}
-                              className="btn btn-light rounded-circle position-absolute top-0 end-0 m-3 shadow-sm"
+                              className="btn btn-light rounded-circle position-absolute top-0 end-0 m-3 shadow-sm d-flex align-items-center justify-content-center"
                               style={{ width: '40px', height: '40px', padding: '0' }}
                             >
                               <Heart
@@ -357,12 +357,12 @@ export function Inicio({ navegarPara, estaLogado }) {
 
       {/* Modal de Filtros Mobile */}
       {mostrarFiltrosMobile && (
-        <div 
-          className="position-fixed top-0 start-0 w-100 h-100 d-lg-none" 
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-lg-none"
           style={{ zIndex: 1050, backgroundColor: 'rgba(0,0,0,0.5)' }}
           onClick={() => setMostrarFiltrosMobile(false)}
         >
-          <div 
+          <div
             className="position-absolute top-0 end-0 h-100 bg-white shadow-lg"
             style={{ width: '300px', maxWidth: '85vw' }}
             onClick={(e) => e.stopPropagation()}
