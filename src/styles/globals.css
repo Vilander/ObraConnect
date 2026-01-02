@@ -1,0 +1,183 @@
+@import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css');
+
+:root {
+  --amarelo: #fee63e;
+  --amarelo-ouro: #fbd455;
+  --azul-claro: #b2c0e3;
+  --azul-marinho: #024768;
+  --branco: #fdfdfd;
+  --cinza: #858585;
+  --laranja-principal: #f16319;
+  --marrom-escuro: #7d4200;
+  --marrom-suave: #945b50;
+  --verde-escuro: #2d6617;
+  --vermelho-escuro: #b31816;
+  --vinho: #99302a;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--branco);
+  color: #333;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+p {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+button {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+input, textarea, select {
+  font-size: 1rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Custom utility classes */
+.bg-azul-marinho {
+  background-color: var(--azul-marinho) !important;
+}
+
+.bg-azul-claro {
+  background-color: var(--azul-claro) !important;
+}
+
+.bg-laranja-principal {
+  background-color: var(--laranja-principal) !important;
+}
+
+.bg-amarelo {
+  background-color: var(--amarelo) !important;
+}
+
+.bg-amarelo-ouro {
+  background-color: var(--amarelo-ouro) !important;
+}
+
+.bg-verde-escuro {
+  background-color: var(--verde-escuro) !important;
+}
+
+.bg-vermelho-escuro {
+  background-color: var(--vermelho-escuro) !important;
+}
+
+.text-azul-marinho {
+  color: var(--azul-marinho) !important;
+}
+
+.text-cinza {
+  color: var(--cinza) !important;
+}
+
+.text-branco {
+  color: var(--branco) !important;
+}
+
+.text-laranja-principal {
+  color: var(--laranja-principal) !important;
+}
+
+.text-amarelo {
+  color: var(--amarelo) !important;
+}
+
+.text-marrom-escuro {
+  color: var(--marrom-escuro) !important;
+}
+
+.btn-laranja {
+  background-color: var(--laranja-principal);
+  color: var(--branco);
+  border: none;
+}
+
+.btn-laranja:hover {
+  background-color: var(--laranja-principal);
+  opacity: 0.9;
+  color: var(--branco);
+}
+
+.btn-verde-escuro {
+  background-color: var(--verde-escuro);
+  color: var(--branco);
+  border: none;
+}
+
+.btn-verde-escuro:hover {
+  background-color: var(--verde-escuro);
+  opacity: 0.9;
+  color: var(--branco);
+}
+
+.border-azul-claro {
+  border-color: var(--azul-claro) !important;
+}
+
+.hover-opacity:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+  transition: all 0.3s ease;
+}
+
+.object-cover {
+  object-fit: cover;
+}

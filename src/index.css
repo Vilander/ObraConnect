@@ -1,0 +1,68 @@
+/* 1. Imports (Obrigatório ser a primeira coisa) */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css");
+@import "tailwindcss";
+
+/* 2. Variáveis Globais (Fora de camadas para garantir leitura) */
+:root {
+  --azul-marinho: #0B213E;
+  --laranja-principal: #FF6600;
+  --azul-claro: #E6F3FF;
+  --cinza: #666666;
+  --branco: #FFFFFF;
+  --amarelo: #FFD700;
+  --verde-escuro: #125C13;
+  --marrom-escuro: #3E2723;
+  --amarelo-ouro: #FFC107;
+  --vermelho-escuro: #B71C1C;
+}
+
+/* 3. Estilos Personalizados (Sem @layer para ganharem do Bootstrap) */
+
+/* Cores de Texto */
+.text-azul-marinho { color: var(--azul-marinho) !important; }
+.text-laranja-principal { color: var(--laranja-principal) !important; }
+.text-cinza { color: var(--cinza) !important; }
+.text-branco { color: var(--branco) !important; }
+.text-amarelo { color: var(--amarelo) !important; }
+.text-marrom-escuro { color: var(--marrom-escuro) !important; }
+
+/* Cores de Fundo */
+.bg-azul-claro { background-color: var(--azul-claro) !important; }
+.bg-azul-marinho { background-color: var(--azul-marinho) !important; }
+
+/* Bordas */
+.border-azul-claro { border-color: var(--azul-claro) !important; }
+.border-azul-marinho { border-color: var(--azul-marinho) !important; }
+
+/* Botões - Forçamos a prioridade aqui */
+.btn-laranja {
+  background-color: var(--laranja-principal) !important;
+  color: var(--branco) !important;
+  border: none;
+}
+.btn-laranja:hover {
+  background-color: var(--laranja-principal);
+  filter: brightness(0.9);
+  color: var(--branco) !important;
+}
+
+.btn-verde-escuro {
+  background-color: var(--verde-escuro) !important;
+  color: var(--branco) !important;
+  border: none;
+}
+.btn-verde-escuro:hover {
+  background-color: var(--verde-escuro);
+  filter: brightness(0.9);
+  color: var(--branco) !important;
+}
+
+/* Utilitários Extras */
+.hover-opacity:hover { opacity: 0.8; }
+.object-cover { object-fit: cover; }
+
+.card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+}

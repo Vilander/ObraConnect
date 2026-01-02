@@ -1,0 +1,18 @@
+1. Usuário Administrador
+
+Login: admin 
+Senha: admin123 
+
+Tipo: admin 
+
+
+Hash SHA-256 no banco: 240014d23059e933ed17b3543666d3a82e5b7c7b8e1544439121a71948ed827e 
+
+2. Usuário Prestador (Exemplo)
+
+Login: pedro_eng 
+Senha: 123456 
+
+Tipo: prestador 
+
+Hash SHA-256 no banco: 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
