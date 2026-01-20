@@ -5,6 +5,7 @@ const cors = require("cors");
 const banco = require("./config/database");
 const rotasAutenticacao = require("./routes/authRoutes");
 const rotasServico = require("./routes/servicoRoutes");
+const path = require("path");
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(cors()); // Permite que o Frontend (React) acesse o Backend
 app.use(express.json()); // Permite que o Backend entenda JSON
 
 // --- CONFIGURAÇÃO DA ROTA---
+app.use("/uploads", express.static("uploads"));
 app.use("/api/auth", rotasAutenticacao);
 app.use("/api/servicos", rotasServico);
 
