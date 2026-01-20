@@ -1,0 +1,41 @@
+# Dependências
+node_modules/
+.pnp
+.pnp.js
+
+# Produção / Build (Vite)
+dist/
+build/
+
+# Variáveis de Ambiente (Segurança)
+# Contém chaves JWT, senhas de banco de dados e URLs sensíveis [cite: 557, 567]
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+eslintdebug.log*
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Banco de Dados e Backups
+# Evita subir dumps de SQL ou backups para o repositório 
+*.sql
+*.bak
+backup_obraconnect.sql
