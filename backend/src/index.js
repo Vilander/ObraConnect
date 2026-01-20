@@ -4,15 +4,16 @@ const express = require("express");
 const cors = require("cors");
 const banco = require("./config/database");
 const rotasAutenticacao = require("./routes/authRoutes");
+const rotasServico = require("./routes/servicoRoutes");
 
 const app = express();
 
 app.use(cors()); // Permite que o Frontend (React) acesse o Backend
 app.use(express.json()); // Permite que o Backend entenda JSON
 
-// --- CONFIGURAÇÃO DA ROTA (NOVO) ---
-// Tudo que for /api/auth/... vai para o arquivo de rotas
-app.use('/api/auth', rotasAutenticacao);
+// --- CONFIGURAÇÃO DA ROTA---
+app.use("/api/auth", rotasAutenticacao);
+app.use("/api/servicos", rotasServico);
 
 const PORT = process.env.PORT || 3001;
 
