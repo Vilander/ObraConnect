@@ -1,0 +1,1 @@
+curl -X POST http://localhost:3001/api/auth/registro -H "Content-Type: application/json" -d "{\"nome_usuario\": \"Administrador\", \"email\": \"vilander.costa@gmail.com\", \"login\": \"admin\", \"senha\": \"admin123\", \"tipo_usuario\": \"admin\"}"

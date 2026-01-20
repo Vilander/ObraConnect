@@ -44,3 +44,60 @@ exports.registrarUsuario = async (req, res) => {
     res.status(500).json({ erro: "Erro ao cadastrar usuário." });
   }
 };
+
+const tokenService = require("../services/tokenService");
+
+exports.login = async (req, res) => {
+  const { login, senha } = req.body;
+
+  if (!login || !senha) {
+    return res.status(400).json({ erro: "Login e senha são obrigatórios!" });
+  }
+
+  try {
+    // 1. Busca o usuário pelo login (ou email)
+    const [usuarios] = await banco.query(
+      "SELECT * FROM tb_usuario WHERE login = ? OR email = ?",
+      [login, login],
+    );
+
+    // Se não achou ninguém
+    if (usuarios.length === 0) {
+      return res.status(401).json({ erro: "Login ou senha inválidos." });
+    }
+
+    const usuarioEncontrado = usuarios[0];
+
+    // 2. Compara a senha enviada com a senha criptografada do banco
+    const senhaValida = await bcrypt.compare(senha, usuarioEncontrado.senha);
+
+    if (!senhaValida) {
+      return res.status(401).json({ erro: "Login ou senha inválidos." });
+    }
+
+    // 3. Se tudo deu certo, gera o Token
+    const tokenAcesso = tokenService.gerarToken(usuarioEncontrado);
+
+    // 4. Retorna os dados (sem a senha!)
+    res.status(200).json({
+      mensagem: "Login realizado com sucesso!",
+      token: tokenAcesso,
+      usuario: {
+        id: usuarioEncontrado.id,
+        nome: usuarioEncontrado.nome_usuario,
+        tipo: usuarioEncontrado.tipo_usuario,
+      },
+    });
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro ao realizar login." });
+  }
+};
+
+exports.obterPerfil = async (req, res) => {
+  // req.usuario foi preenchido pelo Middleware
+  res.status(200).json({
+    mensagem: "Acesso autorizado!",
+    dados_usuario: req.usuario,
+  });
+};
