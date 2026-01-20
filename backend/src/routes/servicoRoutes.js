@@ -10,4 +10,10 @@ router.get("/", servicoController.listarServicos);
 // (E o controller verifica se é prestador)
 router.post("/", verificarToken, servicoController.criarServico);
 
+// Rota Protegida: Editar (precisa do ID na URL)
+router.put('/:id', verificarToken, servicoController.editarServico);
+
+// Rota Protegida: Deletar
+router.delete('/:id', verificarToken, servicoController.deletarServico);
+
 module.exports = router;

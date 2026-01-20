@@ -62,3 +62,72 @@ exports.listarServicos = async (req, res) => {
     res.status(500).json({ erro: "Erro ao buscar serviços." });
   }
 };
+
+// EDITAR SERVIÇO
+exports.editarServico = async (req, res) => {
+    const { id } = req.params; // Pega o ID da URL (ex: /servicos/1)
+    const { titulo, descricao, imagem } = req.body;
+    const usuarioLogado = req.usuario;
+
+    try {
+        // 1. Verifica se o serviço existe e quem é o dono
+        const [servicos] = await banco.query('SELECT * FROM tb_servico WHERE id = ?', [id]);
+        
+        if (servicos.length === 0) {
+            return res.status(404).json({ erro: "Serviço não encontrado." });
+        }
+
+        const servico = servicos[0];
+
+        // 2. REGRA DE SEGURANÇA: Só o dono pode mexer
+        if (servico.id_usuario !== usuarioLogado.id && usuarioLogado.tipo_usuario !== 'admin') {
+            return res.status(403).json({ erro: "Você não tem permissão para alterar este serviço." });
+        }
+
+        // 3. Atualiza no banco
+        await banco.query(
+            'UPDATE tb_servico SET nome_prestador = ?, desc_servico = ?, imagem_url = ? WHERE id = ?',
+            [titulo, descricao, imagem, id]
+        );
+
+        res.status(200).json({ mensagem: "Serviço atualizado com sucesso!" });
+
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: "Erro ao atualizar serviço." });
+    }
+};
+
+// DELETAR SERVIÇO (Soft Delete - Apenas desativa)
+exports.deletarServico = async (req, res) => {
+    const { id } = req.params;
+    const usuarioLogado = req.usuario;
+
+    try {
+      const [servicos] = await banco.query(
+        "SELECT * FROM tb_servico WHERE id = ?",
+        [id],
+      );
+
+      if (servicos.length === 0) {
+        return res.status(404).json({ erro: "Serviço não encontrado." });
+      }
+
+      if (
+        servicos[0].id_usuario !== usuarioLogado.id &&
+        usuarioLogado.tipo_usuario !== "admin"
+      ) {
+        return res
+          .status(403)
+          .json({ erro: "Você não tem permissão para deletar este serviço." });
+      }
+
+      // "Soft Delete": Não apagamos de verdade (DELETE), apenas desativamos (UPDATE) para manter histórico
+      await banco.query("UPDATE tb_servico SET ativo = 0 WHERE id = ?", [id]);
+
+      res.status(200).json({ mensagem: "Serviço removido com sucesso!" });
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: "Erro ao deletar serviço." });
+    }
+};
