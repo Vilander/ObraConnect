@@ -5,6 +5,7 @@ const cors = require("cors");
 const banco = require("./config/database");
 const rotasAutenticacao = require("./routes/authRoutes");
 const rotasServico = require("./routes/servicoRoutes");
+const rotasAvaliacao = require("./routes/avaliacaoRoutes");
 const path = require("path");
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.json()); // Permite que o Backend entenda JSON
 app.use("/uploads", express.static("uploads"));
 app.use("/api/auth", rotasAutenticacao);
 app.use("/api/servicos", rotasServico);
+app.use("/api/avaliacoes", rotasAvaliacao);
 
 const PORT = process.env.PORT || 3001;
 
