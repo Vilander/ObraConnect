@@ -1,10 +1,12 @@
-import { Search, Star, Heart, Filter, X } from 'lucide-react';
+import { Search, Star, Heart, Filter, X, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import AlertDialog from './AlertDialog';
 
 export function Inicio({ navegarPara, estaLogado }) {
   const [servicos, setServicos] = useState([]);
   const [servicosFiltrados, setServicosFiltrados] = useState([]);
+  const [carregando, setCarregando] = useState(true); // Estado de carregamento
+
   const [termoBusca, setTermoBusca] = useState('');
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('');
   const [favoritos, setFavoritos] = useState([]);
@@ -13,124 +15,68 @@ export function Inicio({ navegarPara, estaLogado }) {
   // Estado Dialog
   const [dialog, setDialog] = useState({ aberto: false, mensagem: '' });
 
+  // Lista de Categorias (Sincronizada com seu Banco de Dados)
   const categorias = [
-    'Arquiteto(a)',
-    'Armador(a) de Ferragens',
-    'Azulejista / Pisagista',
-    'Bombeiro(a) Hidráulico / Encanador(a)',
-    'Calheiro(a)',
-    'Carpinteiro(a)',
-    'Desentupidor(a)',
-    'Designer de Interiores',
-    'Eletricista',
-    'Engenheiro(a) Civil',
-    'Gesseiro(a)',
-    'Impermeabilizador(a)',
-    'Instalador(a) de Ar Condicionado',
-    'Instalador(a) de Drywall',
-    'Instalador(a) de Gás',
-    'Instalador(a) de Sistemas de Segurança',
-    'Jardineiro(a) / Paisagista',
-    'Limpador(a) Pós-Obra',
-    'Marceneiro(a)',
-    'Marido de Aluguel',
-    'Mestre de Obras',
-    'Montador(a) de Andaimes',
-    'Montador(a) de Móveis',
-    'Terraplanagem',
-    'Pedreiro(a)',
-    'Pintor(a)',
-    'Serralheiro(a)',
-    'Técnico(a) em Edificações',
-    'Topógrafo(a)',
-    'Vidraceiro(a)'
+    'Arquiteto(a)', 'Armador(a) de Ferragens', 'Azulejista / Pisagista', 'Bombeiro(a) Hidráulico / Encanador(a)',
+    'Calheiro(a)', 'Carpinteiro(a)', 'Desentupidor(a)', 'Designer de Interiores', 'Eletricista',
+    'Engenheiro(a) Civil', 'Gesseiro(a)', 'Impermeabilizador(a)', 'Instalador(a) de Ar Condicionado',
+    'Instalador(a) de Drywall', 'Instalador(a) de Gás', 'Instalador(a) de Sistemas de Segurança',
+    'Jardineiro(a) / Paisagista', 'Limpador(a) Pós-Obra', 'Marceneiro(a)', 'Marido de Aluguel',
+    'Mestre de Obras', 'Montador(a) de Andaimes', 'Montador(a) de Móveis', 'Terraplanagem',
+    'Pedreiro(a)', 'Pintor(a)', 'Serralheiro(a)', 'Técnico(a) em Edificações', 'Topógrafo(a)', 'Vidraceiro(a)'
   ];
 
+  // --- INTEGRAÇÃO: BUSCAR SERVIÇOS DO BACKEND ---
   useEffect(() => {
-    // Mock de serviços para demonstração
-    const servicosMock = [
-      {
-        id: 1,
-        nomePrestador: 'João Silva',
-        descServico: 'Serviços de alvenaria, construção e reforma. Experiência de 15 anos no mercado.',
-        categorias: ['Pedreiro(a)'],
-        imagem: 'https://images.unsplash.com/photo-1672748341520-6a839e6c05bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb25zdHJ1Y3Rpb24lMjB3b3JrZXJ8ZW58MXx8fHwxNzY0Mjg1OTAwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-        notaMedia: 4.8,
-        totalAvaliacoes: 24,
-        telefoneContato: '(11) 98765-4321'
-      },
-      {
-        id: 2,
-        nomePrestador: 'Carlos Elétrica',
-        descServico: 'Instalações elétricas residenciais e comerciais. Certificado e com garantia.',
-        categorias: ['Eletricista'],
-        imagem: 'https://images.unsplash.com/photo-1745590591981-bb6d5274de9f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVjdHJpY2lhbiUyMHdvcmt8ZW58MXx8fHwxNzY0MjMwMjMxfDA&ixlib=rb-4.1.0&q=80&w=1080',
-        notaMedia: 4.9,
-        totalAvaliacoes: 32,
-        telefoneContato: '(11) 98888-1234'
-      },
-      {
-        id: 3,
-        nomePrestador: 'Marcenaria Santos',
-        descServico: 'Móveis planejados e sob medida. Projetos personalizados para sua casa.',
-        categorias: ['Marceneiro(a)'],
-        imagem: 'https://images.unsplash.com/photo-1626081063434-79a2169791b1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXJwZW50ZXIlMjB3b29kd29ya3xlbnwxfHx8fDE3NjQxOTk1NjV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-        notaMedia: 4.7,
-        totalAvaliacoes: 18,
-        telefoneContato: '(11) 97777-5555'
-      },
-      {
-        id: 4,
-        nomePrestador: 'Hidráulica Rápida',
-        descServico: 'Serviços hidráulicos em geral. Atendimento emergencial 24h.',
-        categorias: ['Bombeiro(a) Hidráulico / Encanador(a)'],
-        imagem: 'https://images.unsplash.com/photo-1650246363606-a2402ec42b08?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwbHVtYmVyJTIwd29ya3xlbnwxfHx8fDE3NjQyNTk0Mjh8MA&ixlib=rb-4.1.0&q=80&w=1080',
-        notaMedia: 4.6,
-        totalAvaliacoes: 15,
-        telefoneContato: '(11) 96666-7777'
-      },
-      {
-        id: 5,
-        nomePrestador: 'Pinturas Premium',
-        descServico: 'Pintura residencial e comercial. Qualidade e acabamento perfeito.',
-        categorias: ['Pintor(a)'],
-        imagem: 'https://images.unsplash.com/photo-1525909002-1b05e0c869d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYWludGluZyUyMGhvdXNlfGVufDF8fHx8MTc2NDE4MzUwM3ww&ixlib=rb-4.1.0&q=80&w=1080',
-        notaMedia: 4.8,
-        totalAvaliacoes: 21,
-        telefoneContato: '(11) 95555-8888'
-      },
-      {
-        id: 6,
-        nomePrestador: 'Reformas Total',
-        descServico: 'Reformas completas e pequenos reparos. Equipe qualificada.',
-        categorias: ['Pedreiro(a)', 'Pintor(a)'],
-        imagem: 'https://images.unsplash.com/photo-1645651964715-d200ce0939cc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb25zdHJ1Y3Rpb24lMjB0b29sc3xlbnwxfHx8fDE3NjQyNTM2OTN8MA&ixlib=rb-4.1.0&q=80&w=1080',
-        notaMedia: 4.5,
-        totalAvaliacoes: 12,
-        telefoneContato: '(11) 94444-9999'
-      }
-    ];
+    const buscarServicos = async () => {
+      try {
+        const resposta = await fetch('http://localhost:3001/api/servicos');
+        const dados = await resposta.json();
 
-    setServicos(servicosMock);
-    setServicosFiltrados(servicosMock);
+        // Mapeia os dados do Banco (snake_case) para o Frontend (camelCase)
+        const servicosFormatados = dados.map(item => ({
+          id: item.id,
+          nomePrestador: item.nome_prestador, // Banco: nome_prestador -> Front: nomePrestador
+          descServico: item.desc_servico,
+          imagem: item.imagem_url || 'https://via.placeholder.com/400x300?text=Sem+Imagem', // Fallback se não tiver foto
+          notaMedia: Number(item.nota_media) || 0,
+          totalAvaliacoes: item.total_avaliacoes || 0,
+          telefoneContato: item.telefone || 'Não informado', // Ajuste conforme seu SELECT
+
+          // OBS: Como ainda não implementamos o vínculo de categorias no backend,
+          // vamos deixar um array vazio ou pegar do item se você já implementou.
+          categorias: []
+        }));
+
+        setServicos(servicosFormatados);
+        setServicosFiltrados(servicosFormatados);
+      } catch (erro) {
+        console.error("Erro ao buscar serviços:", erro);
+        setDialog({ aberto: true, mensagem: 'Não foi possível carregar os serviços do servidor.' });
+      } finally {
+        setCarregando(false);
+      }
+    };
+
+    buscarServicos();
   }, []);
 
+  // Filtros (Mantido igual)
   useEffect(() => {
     let filtrados = servicos;
 
-    // Filtrar por categoria
     if (categoriaSelecionada) {
+      // Nota: Como o backend ainda não manda categorias, esse filtro só funcionará
+      // quando implementarmos o vínculo no backend.
       filtrados = filtrados.filter(servico =>
         servico.categorias.includes(categoriaSelecionada)
       );
     }
 
-    // Filtrar por busca
     if (termoBusca) {
       filtrados = filtrados.filter(servico =>
         servico.nomePrestador.toLowerCase().includes(termoBusca.toLowerCase()) ||
-        servico.descServico.toLowerCase().includes(termoBusca.toLowerCase()) ||
-        servico.categorias.some(cat => cat.toLowerCase().includes(termoBusca.toLowerCase()))
+        servico.descServico.toLowerCase().includes(termoBusca.toLowerCase())
       );
     }
 
@@ -142,7 +88,6 @@ export function Inicio({ navegarPara, estaLogado }) {
       setDialog({ aberto: true, mensagem: 'Você precisa estar logado para favoritar serviços' });
       return;
     }
-
     setFavoritos(anterior =>
       anterior.includes(idServico)
         ? anterior.filter(id => id !== idServico)
@@ -183,10 +128,11 @@ export function Inicio({ navegarPara, estaLogado }) {
         </div>
       </section>
 
-      {/* Conteúdo Principal com Barra Lateral */}
+      {/* Conteúdo Principal */}
       <section className="py-4 px-3">
         <div className="container">
           <div className="row g-4">
+
             {/* Filtros Laterais - Desktop */}
             <div className="col-lg-3 d-none d-lg-block">
               <div className="card shadow-sm sticky-top" style={{ top: '100px' }}>
@@ -194,19 +140,14 @@ export function Inicio({ navegarPara, estaLogado }) {
                   <div className="d-flex align-items-center justify-content-between mb-3">
                     <h4 className="text-azul-marinho mb-0">Filtros</h4>
                     {(categoriaSelecionada || termoBusca) && (
-                      <button
-                        onClick={limparFiltros}
-                        className="btn btn-sm btn-link text-laranja-principal p-0"
-                      >
+                      <button onClick={limparFiltros} className="btn btn-sm btn-link text-laranja-principal p-0">
                         Limpar
                       </button>
                     )}
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label text-azul-marinho">
-                      Categoria
-                    </label>
+                    <label className="form-label text-azul-marinho">Categoria</label>
                     <select
                       className="form-select"
                       value={categoriaSelecionada}
@@ -214,18 +155,14 @@ export function Inicio({ navegarPara, estaLogado }) {
                     >
                       <option value="">Todas as categorias</option>
                       {categorias.map((categoria) => (
-                        <option key={categoria} value={categoria}>
-                          {categoria}
-                        </option>
+                        <option key={categoria} value={categoria}>{categoria}</option>
                       ))}
                     </select>
                   </div>
 
-                  {categoriaSelecionada && (
-                    <div className="alert alert-info small mb-0">
-                      <strong>{servicosFiltrados.length}</strong> serviço(s) encontrado(s)
-                    </div>
-                  )}
+                  <div className="alert alert-light small text-cinza">
+                    <small>Filtro por categoria em breve</small>
+                  </div>
                 </div>
               </div>
             </div>
@@ -243,16 +180,17 @@ export function Inicio({ navegarPara, estaLogado }) {
 
             {/* Grade de Serviços */}
             <div className="col-12 col-lg-9">
-              {servicosFiltrados.length === 0 ? (
+              {carregando ? (
                 <div className="text-center py-5">
-                  <p className="text-cinza">
-                    Nenhum serviço encontrado
-                  </p>
+                  <Loader2 className="animate-spin mx-auto text-laranja-principal" size={48} />
+                  <p className="mt-3 text-cinza">Carregando serviços...</p>
+                </div>
+              ) : servicosFiltrados.length === 0 ? (
+                <div className="text-center py-5">
+                  <p className="text-cinza">Nenhum serviço encontrado.</p>
+                  <p className="small text-cinza">Tente cadastrar um novo serviço ou limpar a busca.</p>
                   {(categoriaSelecionada || termoBusca) && (
-                    <button
-                      onClick={limparFiltros}
-                      className="btn btn-laranja mt-3"
-                    >
+                    <button onClick={limparFiltros} className="btn btn-laranja mt-3">
                       Limpar Filtros
                     </button>
                   )}
@@ -260,7 +198,7 @@ export function Inicio({ navegarPara, estaLogado }) {
               ) : (
                 <>
                   <div className="mb-3 text-cinza">
-                    Exibindo <strong>{servicosFiltrados.length}</strong> de <strong>{servicos.length}</strong> serviços
+                    Exibindo <strong>{servicosFiltrados.length}</strong> serviço(s)
                   </div>
                   <div className="row g-4">
                     {servicosFiltrados.map((servico) => (
@@ -275,7 +213,8 @@ export function Inicio({ navegarPara, estaLogado }) {
                               src={servico.imagem}
                               alt={servico.nomePrestador}
                               className="card-img-top object-cover"
-                              style={{ height: '200px' }}
+                              style={{ height: '200px', width: '100%' }}
+                              onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indispon%C3%ADvel'; }}
                             />
                             <button
                               onClick={(e) => {
@@ -294,29 +233,23 @@ export function Inicio({ navegarPara, estaLogado }) {
                           </div>
 
                           <div className="card-body">
-                            <h3 className="card-title text-azul-marinho">
+                            <h3 className="card-title text-azul-marinho h5">
                               {servico.nomePrestador}
                             </h3>
 
+                            {/* Categorias (Placeholder até implementar no backend) */}
                             <div className="d-flex flex-wrap gap-2 mt-2">
-                              {servico.categorias.map((cat) => (
-                                <span
-                                  key={cat}
-                                  className="badge bg-amarelo-ouro text-marrom-escuro"
-                                >
-                                  {cat}
-                                </span>
-                              ))}
+                              {/* Como ainda não vem do back, não mostramos nada ou um badge fixo */}
                             </div>
 
-                            <p className="card-text mt-3 text-cinza line-clamp-2">
+                            <p className="card-text mt-3 text-cinza line-clamp-2 small">
                               {servico.descServico}
                             </p>
 
                             <div className="d-flex align-items-center justify-content-between mt-3">
                               <div className="d-flex align-items-center gap-1">
                                 <Star size={20} fill="var(--amarelo)" color="var(--amarelo)" />
-                                <span className="text-azul-marinho">
+                                <span className="text-azul-marinho fw-bold">
                                   {servico.notaMedia.toFixed(1)}
                                 </span>
                                 <span className="text-cinza small">
@@ -385,12 +318,6 @@ export function Inicio({ navegarPara, estaLogado }) {
                     ))}
                   </select>
                 </div>
-
-                {categoriaSelecionada && (
-                  <div className="alert alert-info small">
-                    <strong>{servicosFiltrados.length}</strong> serviço(s) encontrado(s)
-                  </div>
-                )}
               </div>
 
               <div className="p-3 border-top">

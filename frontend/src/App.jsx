@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Cabecalho } from './componentes/Cabecalho';
 import { Login } from './componentes/Login';
 import { Inicio } from './componentes/Inicio';
@@ -12,6 +12,24 @@ export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [idServicoSelecionado, setIdServicoSelecionado] = useState(null);
 
+  // --- NOVO: Verifica se já existe um login salvo ao abrir o site ---
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const usuarioSalvo = localStorage.getItem('usuario');
+
+    if (token && usuarioSalvo) {
+      try {
+        setUsuario(JSON.parse(usuarioSalvo));
+        setEstaLogado(true);
+      } catch (erro) {
+        // Se der erro ao ler os dados, limpa tudo por segurança
+        console.error("Erro ao restaurar sessão:", erro);
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+      }
+    }
+  }, []); // O array vazio [] garante que isso rode apenas 1 vez na inicialização
+
   const navegarPara = (pagina, idServico) => {
     setPaginaAtual(pagina);
     if (idServico) {
@@ -24,12 +42,18 @@ export default function App() {
     setUsuario(dadosUsuario);
     setEstaLogado(true);
     setPaginaAtual('inicio');
+    // Nota: O salvamento no localStorage já é feito dentro do Login.jsx
   };
 
+  // --- ATUALIZADO: Logout completo ---
   const realizarLogout = () => {
     setUsuario(null);
     setEstaLogado(false);
     setPaginaAtual('inicio');
+
+    // Remove os dados do navegador
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
   };
 
   return (
@@ -40,7 +64,7 @@ export default function App() {
           navegarPara={navegarPara}
           estaLogado={estaLogado}
           realizarLogout={realizarLogout}
-          nomeUsuario={usuario?.nome}
+          nomeUsuario={usuario?.nome_usuario || usuario?.nome} // Ajuste para aceitar ambos os formatos
         />
       )}
 

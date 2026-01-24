@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { User, Lock, Mail, Phone, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Mail, Phone, Eye, EyeOff, Loader2 } from 'lucide-react'; // Adicionei Loader2 para loading
 import AlertDialog from './AlertDialog';
 
 export function Login({ realizarLogin }) {
   const [ehCadastro, setEhCadastro] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
   // Estado para controlar o Dialog
   const [alerta, setAlerta] = useState({ aberto: false, mensagem: '' });
-
   const mostrarAlerta = (msg) => setAlerta({ aberto: true, mensagem: msg });
 
   // Formulário de login
@@ -24,37 +24,94 @@ export function Login({ realizarLogin }) {
     confirmarSenha: '',
     nomeUsuario: '',
     email: '',
-    telefone: ''
+    telefone: '',
+    tipo_usuario: 'usuario' // Padrão
   });
 
+  // --- INTEGRAÇÃO: LOGIN ---
   const submeterLogin = async (e) => {
     e.preventDefault();
+    setCarregando(true);
 
-    if (dadosLogin.login && dadosLogin.senha) {
-      realizarLogin({
-        nome: 'Usuário Demo',
-        email: 'usuario@demo.com'
-      });
-    } else {
+    if (!dadosLogin.login || !dadosLogin.senha) {
       mostrarAlerta('Por favor, preencha todos os campos');
-    }
-  };
-
-  const submeterCadastro = async (e) => {
-    e.preventDefault();
-
-    if (dadosCadastro.senha !== dadosCadastro.confirmarSenha) {
-      mostrarAlerta('As senhas não coincidem');
+      setCarregando(false);
       return;
     }
 
-    if (dadosCadastro.login && dadosCadastro.senha && dadosCadastro.nomeUsuario && dadosCadastro.email) {
-      realizarLogin({
-        nome: dadosCadastro.nomeUsuario,
-        email: dadosCadastro.email
+    try {
+      const resposta = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dadosLogin)
       });
-    } else {
-      mostrarAlerta('Por favor, preencha todos os campos obrigatórios');
+
+      const dados = await resposta.json();
+
+      if (resposta.ok) {
+        // SUCESSO: Salva o token e avisa o App.jsx
+        localStorage.setItem('token', dados.token); // Guarda o crachá
+        localStorage.setItem('usuario', JSON.stringify(dados.usuario));
+
+        realizarLogin(dados.usuario); // Atualiza o estado global
+      } else {
+        // ERRO: Mostra a mensagem que veio do backend
+        mostrarAlerta(dados.erro || 'Erro ao realizar login');
+      }
+    } catch (erro) {
+      mostrarAlerta('Erro de conexão com o servidor. Verifique se o backend está rodando.');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // --- INTEGRAÇÃO: CADASTRO ---
+  const submeterCadastro = async (e) => {
+    e.preventDefault();
+    setCarregando(true);
+
+    if (dadosCadastro.senha !== dadosCadastro.confirmarSenha) {
+      mostrarAlerta('As senhas não coincidem');
+      setCarregando(false);
+      return;
+    }
+
+    // Prepara os dados para o backend (mapeando os campos certos)
+    const payload = {
+      nome_usuario: dadosCadastro.nomeUsuario,
+      login: dadosCadastro.login,
+      email: dadosCadastro.email,
+      senha: dadosCadastro.senha,
+      tipo_usuario: 'usuario' // Ou adicione um checkbox no form para 'prestador'
+    };
+
+    try {
+      const resposta = await fetch('http://localhost:3001/api/auth/registro', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const dados = await resposta.json();
+
+      if (resposta.ok) {
+        mostrarAlerta('Conta criada com sucesso! Faça login para continuar.');
+        setEhCadastro(false); // Volta para a tela de login
+        // Limpa o formulário
+        setDadosCadastro({
+          login: '', senha: '', confirmarSenha: '', nomeUsuario: '', email: '', telefone: ''
+        });
+      } else {
+        mostrarAlerta(dados.erro || 'Erro ao criar conta');
+      }
+    } catch (erro) {
+      mostrarAlerta('Erro de conexão com o servidor.');
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -90,6 +147,7 @@ export function Login({ realizarLogin }) {
                     className="form-control ps-5 py-3 border-2 border-azul-claro"
                     placeholder="Digite seu usuário"
                     required
+                    disabled={carregando}
                   />
                 </div>
               </div>
@@ -107,6 +165,7 @@ export function Login({ realizarLogin }) {
                     className="form-control ps-5 pe-5 py-3 border-2 border-azul-claro"
                     placeholder="Digite sua senha"
                     required
+                    disabled={carregando}
                   />
                   <button
                     type="button"
@@ -120,9 +179,15 @@ export function Login({ realizarLogin }) {
 
               <button
                 type="submit"
-                className="btn btn-laranja w-100 py-3 mt-2"
+                className="btn btn-laranja w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2"
+                disabled={carregando}
               >
-                Entrar
+                {carregando ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Entrando...
+                  </>
+                ) : 'Entrar'}
               </button>
 
               <div className="text-center mt-3">
@@ -131,7 +196,7 @@ export function Login({ realizarLogin }) {
                   onClick={() => setEhCadastro(true)}
                   className="btn btn-link text-azul-marinho text-decoration-none"
                 >
-                  Não tem conta? Cadastre-se aqui
+                  Não tem conta? <strong>Cadastre-se aqui</strong>
                 </button>
               </div>
             </form>
@@ -151,6 +216,7 @@ export function Login({ realizarLogin }) {
                     className="form-control ps-5 py-3 border-2 border-azul-claro"
                     placeholder="Seu nome completo"
                     required
+                    disabled={carregando}
                   />
                 </div>
               </div>
@@ -168,6 +234,7 @@ export function Login({ realizarLogin }) {
                     className="form-control ps-5 py-3 border-2 border-azul-claro"
                     placeholder="Escolha um nome de usuário"
                     required
+                    disabled={carregando}
                   />
                 </div>
               </div>
@@ -185,10 +252,12 @@ export function Login({ realizarLogin }) {
                     className="form-control ps-5 py-3 border-2 border-azul-claro"
                     placeholder="seu@email.com"
                     required
+                    disabled={carregando}
                   />
                 </div>
               </div>
 
+              {/* Campo Telefone mantido visualmente, mas não enviado ao backend por enquanto pois a tabela tb_usuario pode não ter esse campo ainda, focando no MVP */}
               <div className="mb-3">
                 <label className="form-label text-azul-marinho">
                   Telefone
@@ -201,6 +270,7 @@ export function Login({ realizarLogin }) {
                     onChange={(e) => setDadosCadastro({ ...dadosCadastro, telefone: e.target.value })}
                     className="form-control ps-5 py-3 border-2 border-azul-claro"
                     placeholder="(00) 00000-0000"
+                    disabled={carregando}
                   />
                 </div>
               </div>
@@ -218,6 +288,7 @@ export function Login({ realizarLogin }) {
                     className="form-control ps-5 pe-5 py-3 border-2 border-azul-claro"
                     placeholder="Crie uma senha"
                     required
+                    disabled={carregando}
                   />
                   <button
                     type="button"
@@ -242,15 +313,22 @@ export function Login({ realizarLogin }) {
                     className="form-control ps-5 py-3 border-2 border-azul-claro"
                     placeholder="Confirme sua senha"
                     required
+                    disabled={carregando}
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="btn btn-laranja w-100 py-3 mt-2"
+                className="btn btn-laranja w-100 py-3 mt-2 d-flex align-items-center justify-content-center gap-2"
+                disabled={carregando}
               >
-                Criar Conta
+                {carregando ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Criando conta...
+                  </>
+                ) : 'Criar Conta'}
               </button>
 
               <div className="text-center mt-3">
@@ -259,7 +337,7 @@ export function Login({ realizarLogin }) {
                   onClick={() => setEhCadastro(false)}
                   className="btn btn-link text-azul-marinho text-decoration-none"
                 >
-                  Já tem conta? Faça login aqui
+                  Já tem conta? <strong>Faça login aqui</strong>
                 </button>
               </div>
             </form>
