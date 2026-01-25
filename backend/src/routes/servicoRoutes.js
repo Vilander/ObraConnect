@@ -4,12 +4,26 @@ const servicoController = require("../controllers/servicoController");
 const { verificarToken } = require("../middlewares/autenticacao");
 const upload = require("../config/upload");
 
-// Rota Pública: Qualquer um pode ver os serviços
+// --- 1. ROTAS ESPECÍFICAS  ---
+
+// Meus Serviços (Precisa vir ANTES do /:id para não ser confundido com um ID)
+router.get(
+  "/meus-servicos",
+  verificarToken,
+  servicoController.listarMeusServicos,
+);
+
+// --- 2. ROTAS GERAIS E DINÂMICAS ---
+
+// Listar todos os serviços (Pública)
 router.get("/", servicoController.listarServicos);
+
+// Buscar UM serviço específico pelo ID (Pública)
 router.get("/:id", servicoController.buscarPorId);
 
-// Rota Protegida: Apenas quem tem token pode tentar criar
-// (E o controller verifica se é prestador)
+// --- 3. ROTAS DE GERENCIAMENTO (POST, PUT, DELETE) ---
+
+// Criar Serviço (Protegida + Upload de Imagem)
 router.post(
   "/",
   verificarToken,
@@ -17,10 +31,14 @@ router.post(
   servicoController.criarServico,
 );
 
-// Rota Protegida: Editar (precisa do ID na URL)
-router.put("/:id", verificarToken, servicoController.editarServico);
-
-// Rota Protegida: Deletar
+// Editar Serviço (Protegida)
+router.put(
+  "/:id",
+  verificarToken,
+  upload.single("imagem"),
+  servicoController.editarServico,
+);
+// Deletar Serviço (Protegida)
 router.delete("/:id", verificarToken, servicoController.deletarServico);
 
 module.exports = router;

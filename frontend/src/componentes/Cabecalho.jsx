@@ -90,6 +90,7 @@ export function Cabecalho({ paginaAtual, navegarPara, estaLogado, realizarLogout
 
             {estaLogado ? (
               <>
+                {/* 1. Botão de Ação Principal (Anunciar ou Virar Prestador) */}
                 <li className="nav-item">
                   {ehPrestador ? (
                     <button
@@ -111,19 +112,7 @@ export function Cabecalho({ paginaAtual, navegarPara, estaLogado, realizarLogout
                   )}
                 </li>
 
-                <li className="nav-item dropdown">
-                  <div className="d-flex align-items-center gap-2 text-white border-start border-white-50 ps-3 ms-2">
-                    <div className="d-flex flex-column text-end lh-1">
-                      <span className="small text-white-50">Olá,</span>
-                      <span className="fw-bold">{nomeUsuario}</span>
-                    </div>
-                    <div className="bg-white-50 rounded-circle p-2">
-                      <User size={20} className="text-azul-marinho" />
-                    </div>
-                  </div>
-                </li>
-
-                {/* --- Lógica Condicional: Apenas prestadores veem Minhas Avaliações --- */}
+                {/* 2. Link Minhas Avaliações (Apenas Prestadores) */}
                 {ehPrestador && (
                   <li className="nav-item">
                     <button
@@ -135,13 +124,53 @@ export function Cabecalho({ paginaAtual, navegarPara, estaLogado, realizarLogout
                   </li>
                 )}
 
-                <li className="nav-item">
-                  <button onClick={realizarLogout} className="btn btn-link text-white-50 hover-text-white p-0 ms-2">
-                    <LogOut size={20} />
-                  </button>
+                {/* 3. Dropdown do Usuário (Agora com Meus Serviços e Sair) */}
+                <li className="nav-item dropdown">
+                  <a
+                    className="nav-link dropdown-toggle d-flex align-items-center gap-2 text-white border-start border-white-50 ps-3 ms-2"
+                    href="#"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <div className="d-flex flex-column text-end lh-1">
+                      <span className="small text-white-50">Olá,</span>
+                      <span className="fw-bold">{nomeUsuario}</span>
+                    </div>
+                    <div className="bg-white-50 rounded-circle p-2">
+                      <User size={20} className="text-azul-marinho" />
+                    </div>
+                  </a>
+
+                  <ul className="dropdown-menu dropdown-menu-end shadow border-0">
+                    {/* Item: Meus Serviços (Só para prestadores) */}
+                    {ehPrestador && (
+                      <li>
+                        <button
+                          onClick={() => navegarPara('meus-servicos')}
+                          className="dropdown-item d-flex align-items-center gap-2 py-2"
+                        >
+                          <HardHat size={16} /> Meus Serviços
+                        </button>
+                      </li>
+                    )}
+
+                    <li><hr className="dropdown-divider" /></li>
+
+                    {/* Item: Sair */}
+                    <li>
+                      <button
+                        onClick={realizarLogout}
+                        className="dropdown-item text-danger d-flex align-items-center gap-2 py-2"
+                      >
+                        <LogOut size={16} /> Sair
+                      </button>
+                    </li>
+                  </ul>
                 </li>
               </>
             ) : (
+              // 4. Botão de Login (Visitante)
               <li className="nav-item ms-2">
                 <button
                   onClick={() => navegarPara('login')}

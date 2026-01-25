@@ -5,6 +5,8 @@ import { Inicio } from './componentes/Inicio';
 import { DetalheServico } from './componentes/DetalheServico';
 import { CadastrarServico } from './componentes/CadastrarServico';
 import { MinhasAvaliacoes } from './componentes/MinhasAvaliacoes';
+import { MeusServicos } from './componentes/MeusServicos';
+import { EditarServico } from './componentes/EditarServico';
 
 export default function App() {
   const [paginaAtual, setPaginaAtual] = useState('inicio');
@@ -28,7 +30,7 @@ export default function App() {
         localStorage.removeItem('usuario');
       }
     }
-  }, []); // O array vazio [] garante que isso rode apenas 1 vez na inicialização
+  }, []);
 
   const navegarPara = (pagina, idServico) => {
     setPaginaAtual(pagina);
@@ -42,16 +44,13 @@ export default function App() {
     setUsuario(dadosUsuario);
     setEstaLogado(true);
     setPaginaAtual('inicio');
-    // Nota: O salvamento no localStorage já é feito dentro do Login.jsx
   };
 
-  // --- ATUALIZADO: Logout completo ---
   const realizarLogout = () => {
     setUsuario(null);
     setEstaLogado(false);
     setPaginaAtual('inicio');
 
-    // Remove os dados do navegador
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
   };
@@ -64,7 +63,7 @@ export default function App() {
           navegarPara={navegarPara}
           estaLogado={estaLogado}
           realizarLogout={realizarLogout}
-          nomeUsuario={usuario?.nome_usuario || usuario?.nome} // Ajuste para aceitar ambos os formatos
+          nomeUsuario={usuario?.nome_usuario || usuario?.nome}
         />
       )}
 
@@ -89,22 +88,7 @@ export default function App() {
           {estaLogado ? (
             <CadastrarServico navegarPara={navegarPara} />
           ) : (
-            <div className="min-vh-100 d-flex align-items-center justify-content-center px-3">
-              <div className="text-center">
-                <h2 className="text-azul-marinho">
-                  Você precisa estar logado
-                </h2>
-                <p className="text-cinza mt-2">
-                  Faça login para cadastrar um serviço
-                </p>
-                <button
-                  onClick={() => navegarPara('login')}
-                  className="btn btn-laranja mt-4 px-5 py-3"
-                >
-                  Fazer Login
-                </button>
-              </div>
-            </div>
+            <TelaLoginObrigatorio navegarPara={navegarPara} msg="cadastrar um serviço" />
           )}
         </>
       )}
@@ -114,22 +98,30 @@ export default function App() {
           {estaLogado ? (
             <MinhasAvaliacoes navegarPara={navegarPara} />
           ) : (
-            <div className="min-vh-100 d-flex align-items-center justify-content-center px-3">
-              <div className="text-center">
-                <h2 className="text-azul-marinho">
-                  Você precisa estar logado
-                </h2>
-                <p className="text-cinza mt-2">
-                  Faça login para ver suas avaliações
-                </p>
-                <button
-                  onClick={() => navegarPara('login')}
-                  className="btn btn-laranja mt-4 px-5 py-3"
-                >
-                  Fazer Login
-                </button>
-              </div>
-            </div>
+            <TelaLoginObrigatorio navegarPara={navegarPara} msg="ver suas avaliações" />
+          )}
+        </>
+      )}
+
+      {/* MEUS SERVIÇOS */}
+      {paginaAtual === 'meus-servicos' && (
+        <>
+          {estaLogado ? (
+            <MeusServicos navegarPara={navegarPara} />
+          ) : (
+            <TelaLoginObrigatorio navegarPara={navegarPara} msg="gerenciar seus serviços" />
+          )}
+        </>
+      )}
+      {paginaAtual === 'editar-servico' && idServicoSelecionado && (
+        <>
+          {estaLogado ? (
+            <EditarServico
+              idServico={idServicoSelecionado}
+              navegarPara={navegarPara}
+            />
+          ) : (
+            <TelaLoginObrigatorio navegarPara={navegarPara} msg="editar seu serviço" />
           )}
         </>
       )}
@@ -149,6 +141,28 @@ export default function App() {
           </p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// Pequeno componente auxiliar para evitar repetição do HTML de "Você precisa estar logado"
+function TelaLoginObrigatorio({ navegarPara, msg }) {
+  return (
+    <div className="min-vh-100 d-flex align-items-center justify-content-center px-3">
+      <div className="text-center">
+        <h2 className="text-azul-marinho">
+          Você precisa estar logado
+        </h2>
+        <p className="text-cinza mt-2">
+          Faça login para {msg}
+        </p>
+        <button
+          onClick={() => navegarPara('login')}
+          className="btn btn-laranja mt-4 px-5 py-3"
+        >
+          Fazer Login
+        </button>
+      </div>
     </div>
   );
 }

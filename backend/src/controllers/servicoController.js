@@ -1,8 +1,82 @@
 const banco = require("../config/database");
 
+// =========================================================
+// 1. MÉTODOS DE LEITURA (Públicos e Listagens)
+// =========================================================
+
+// Listar todos os serviços (Pública)
+exports.listarServicos = async (req, res) => {
+  try {
+    const [servicos] = await banco.query(`
+      SELECT s.*, u.nome_usuario 
+      FROM tb_servico s
+      JOIN tb_usuario u ON s.id_usuario = u.id
+      ORDER BY s.id DESC
+    `);
+
+    res.status(200).json(servicos);
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro ao buscar serviços." });
+  }
+};
+
+// Buscar um serviço específico pelo ID (Pública)
+exports.buscarPorId = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [servicos] = await banco.query(
+      `
+      SELECT s.*, u.nome_usuario, u.email, u.telefone 
+      FROM tb_servico s
+      JOIN tb_usuario u ON s.id_usuario = u.id
+      WHERE s.id = ?
+      `,
+      [id],
+    );
+
+    if (servicos.length === 0) {
+      return res.status(404).json({ erro: "Serviço não encontrado." });
+    }
+
+    res.status(200).json(servicos[0]);
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro ao buscar detalhes do serviço." });
+  }
+};
+
+// Listar apenas serviços do usuário logado
+exports.listarMeusServicos = async (req, res) => {
+  const usuarioLogado = req.usuario;
+
+  try {
+    const [servicos] = await banco.query(
+      `
+      SELECT * FROM tb_servico 
+      WHERE id_usuario = ?
+      ORDER BY id DESC
+      `,
+      [usuarioLogado.id],
+    );
+
+    res.status(200).json(servicos);
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro ao buscar seus serviços." });
+  }
+};
+
+// =========================================================
+// 2. MÉTODOS DE ESCRITA (Criar, Editar, Deletar)
+// =========================================================
+
+// Criar novo serviço
 exports.criarServico = async (req, res) => {
   const usuarioLogado = req.usuario;
 
+  // Validação de Permissão
   if (
     usuarioLogado.tipo_usuario !== "prestador" &&
     usuarioLogado.tipo_usuario !== "admin"
@@ -13,7 +87,7 @@ exports.criarServico = async (req, res) => {
   }
 
   const arquivo = req.file;
-  const { titulo, descricao, valor } = req.body;
+  const { titulo, descricao } = req.body; // Removi 'valor' que não estamos usando no banco
 
   if (!titulo || !descricao) {
     return res
@@ -21,20 +95,17 @@ exports.criarServico = async (req, res) => {
       .json({ erro: "Título e Descrição são obrigatórios." });
   }
 
-  // Se o usuário mandou arquivo, montamos o caminho. Se não, fica null.
-  // Salvamos algo como: "http://localhost:3001/uploads/123456-foto.jpg"
+  // Caminho da Imagem
   let caminhoImagem = null;
-
   if (arquivo) {
-    // Nota: Em produção, troque 'localhost' pela URL do seu site
     caminhoImagem = `http://localhost:3001/uploads/${arquivo.filename}`;
   }
 
   try {
     const [resultado] = await banco.query(
-      `INSERT INTO tb_servico (id_usuario, nome_prestador, desc_servico, imagem_url, data_cadastro) 
-             VALUES (?, ?, ?, ?, NOW())`,
-      [usuarioLogado.id, titulo, descricao, caminhoImagem],
+      `INSERT INTO tb_servico (id_usuario, nome_prestador, titulo, desc_servico, imagem_url, data_cadastro) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [usuarioLogado.id, usuarioLogado.nome, titulo, descricao, caminhoImagem],
     );
 
     res.status(201).json({
@@ -48,81 +119,14 @@ exports.criarServico = async (req, res) => {
   }
 };
 
-// Função para listar todos os serviços (Pública)
-exports.listarServicos = async (req, res) => {
-  try {
-    const [servicos] = await banco.query(`
-            SELECT s.*, u.nome_usuario 
-            FROM tb_servico s
-            JOIN tb_usuario u ON s.id_usuario = u.id
-        `);
-
-    res.status(200).json(servicos);
-  } catch (erro) {
-    console.error(erro);
-    res.status(500).json({ erro: "Erro ao buscar serviços." });
-  }
-};
-
-exports.buscarPorId = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const [servicos] = await banco.query(
-      `
-            SELECT s.*, u.nome_usuario, u.email, u.telefone 
-            FROM tb_servico s
-            JOIN tb_usuario u ON s.id_usuario = u.id
-            WHERE s.id = ?
-        `,
-      [id],
-    );
-
-    if (servicos.length === 0) {
-      return res.status(404).json({ erro: "Serviço não encontrado." });
-    }
-
-    res.status(200).json(servicos[0]);
-  } catch (erro) {
-    console.error(erro);
-    res.status(500).json({ erro: "Erro ao buscar detalhes do serviço." });
-  }
-};
-
-// BUSCAR UM SERVIÇO ESPECÍFICO (Público)
-exports.buscarPorId = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const [servicos] = await banco.query(
-      `
-            SELECT s.*, u.nome_usuario, u.email, u.telefone 
-            FROM tb_servico s
-            JOIN tb_usuario u ON s.id_usuario = u.id
-            WHERE s.id = ?
-        `,
-      [id],
-    );
-
-    if (servicos.length === 0) {
-      return res.status(404).json({ erro: "Serviço não encontrado." });
-    }
-
-    res.status(200).json(servicos[0]);
-  } catch (erro) {
-    console.error(erro);
-    res.status(500).json({ erro: "Erro ao buscar detalhes do serviço." });
-  }
-};
-
-// EDITAR SERVIÇO
+// Atualizar serviço (PUT)
 exports.editarServico = async (req, res) => {
-  const { id } = req.params; // Pega o ID da URL (ex: /servicos/1)
-  const { titulo, descricao, imagem } = req.body;
+  const { id } = req.params;
+  const { titulo, descricao } = req.body;
   const usuarioLogado = req.usuario;
 
   try {
-    // 1. Verifica se o serviço existe e quem é o dono
+    // 1. Verifica existência
     const [servicos] = await banco.query(
       "SELECT * FROM tb_servico WHERE id = ?",
       [id],
@@ -132,37 +136,44 @@ exports.editarServico = async (req, res) => {
       return res.status(404).json({ erro: "Serviço não encontrado." });
     }
 
-    const servico = servicos[0];
-
-    // 2. REGRA DE SEGURANÇA: Só o dono pode mexer
-    if (
-      servico.id_usuario !== usuarioLogado.id &&
-      usuarioLogado.tipo_usuario !== "admin"
-    ) {
+    // 2. Verifica permissão (Dono)
+    if (servicos[0].id_usuario !== usuarioLogado.id) {
       return res
         .status(403)
-        .json({ erro: "Você não tem permissão para alterar este serviço." });
+        .json({ erro: "Você não tem permissão para editar este serviço." });
     }
 
-    // 3. Atualiza no banco
-    await banco.query(
-      "UPDATE tb_servico SET nome_prestador = ?, desc_servico = ?, imagem_url = ? WHERE id = ?",
-      [titulo, descricao, imagem, id],
-    );
+    // 3. Monta Query Dinâmica
+    let sql = "UPDATE tb_servico SET titulo = ?, desc_servico = ?";
+    let params = [titulo, descricao];
+
+    if (req.file) {
+      const imagemUrl = `http://localhost:3001/uploads/${req.file.filename}`;
+      sql += ", imagem_url = ?";
+      params.push(imagemUrl);
+    }
+
+    sql += " WHERE id = ?";
+    params.push(id);
+
+    await banco.query(sql, params);
 
     res.status(200).json({ mensagem: "Serviço atualizado com sucesso!" });
   } catch (erro) {
-    console.error(erro);
-    res.status(500).json({ erro: "Erro ao atualizar serviço." });
+    console.error("Erro SQL:", erro);
+    res
+      .status(500)
+      .json({ erro: "Erro ao atualizar serviço no banco de dados." });
   }
 };
 
-// DELETAR SERVIÇO (Soft Delete - Apenas desativa)
+// Deletar serviço (DELETE)
 exports.deletarServico = async (req, res) => {
   const { id } = req.params;
   const usuarioLogado = req.usuario;
 
   try {
+    // 1. Verifica existência
     const [servicos] = await banco.query(
       "SELECT * FROM tb_servico WHERE id = ?",
       [id],
@@ -172,6 +183,7 @@ exports.deletarServico = async (req, res) => {
       return res.status(404).json({ erro: "Serviço não encontrado." });
     }
 
+    // 2. Verifica permissão (Dono ou Admin)
     if (
       servicos[0].id_usuario !== usuarioLogado.id &&
       usuarioLogado.tipo_usuario !== "admin"
@@ -181,8 +193,8 @@ exports.deletarServico = async (req, res) => {
         .json({ erro: "Você não tem permissão para deletar este serviço." });
     }
 
-    // "Soft Delete": Não apagamos de verdade (DELETE), apenas desativamos (UPDATE) para manter histórico
-    await banco.query("UPDATE tb_servico SET ativo = 0 WHERE id = ?", [id]);
+    // 3. Deleta de verdade (Para garantir que suma da lista)
+    await banco.query("DELETE FROM tb_servico WHERE id = ?", [id]);
 
     res.status(200).json({ mensagem: "Serviço removido com sucesso!" });
   } catch (erro) {
