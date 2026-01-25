@@ -50,42 +50,37 @@ const tokenService = require("../services/tokenService");
 exports.login = async (req, res) => {
   const { login, senha } = req.body;
 
-  if (!login || !senha) {
-    return res.status(400).json({ erro: "Login e senha são obrigatórios!" });
-  }
-
   try {
-    // 1. Busca o usuário pelo login (ou email)
+    // 1. Busca o usuário pelo login ou email
     const [usuarios] = await banco.query(
       "SELECT * FROM tb_usuario WHERE login = ? OR email = ?",
       [login, login],
     );
 
-    // Se não achou ninguém
     if (usuarios.length === 0) {
-      return res.status(401).json({ erro: "Login ou senha inválidos." });
+      return res.status(401).json({ erro: "Usuário ou senha incorretos." });
     }
 
-    const usuarioEncontrado = usuarios[0];
+    const usuario = usuarios[0];
 
-    // 2. Compara a senha enviada com a senha criptografada do banco
-    const senhaValida = await bcrypt.compare(senha, usuarioEncontrado.senha);
-
+    // 2. Verifica a senha
+    const senhaValida = await bcrypt.compare(senha, usuario.senha);
     if (!senhaValida) {
-      return res.status(401).json({ erro: "Login ou senha inválidos." });
+      return res.status(401).json({ erro: "Usuário ou senha incorretos." });
     }
 
-    // 3. Se tudo deu certo, gera o Token
-    const tokenAcesso = tokenService.gerarToken(usuarioEncontrado);
+    // 3. Gera o Token
+    const token = tokenService.gerarToken(usuario);
 
-    // 4. Retorna os dados (sem a senha!)
+    // 4. Retorna o Token e os dados do usuário
     res.status(200).json({
       mensagem: "Login realizado com sucesso!",
-      token: tokenAcesso,
+      token: token,
       usuario: {
-        id: usuarioEncontrado.id,
-        nome: usuarioEncontrado.nome_usuario,
-        tipo: usuarioEncontrado.tipo_usuario,
+        id: usuario.id,
+        nome: usuario.nome_usuario,
+        email: usuario.email,
+        tipo_usuario: usuario.tipo_usuario,
       },
     });
   } catch (erro) {
@@ -100,4 +95,40 @@ exports.obterPerfil = async (req, res) => {
     mensagem: "Acesso autorizado!",
     dados_usuario: req.usuario,
   });
+};
+
+// PROMOVER USUÁRIO A PRESTADOR
+exports.tornarPrestador = async (req, res) => {
+  const usuarioLogado = req.usuario; // Vem do token atual
+
+  try {
+    // 1. Atualiza no Banco
+    await banco.query(
+      'UPDATE tb_usuario SET tipo_usuario = "prestador" WHERE id = ?',
+      [usuarioLogado.id],
+    );
+
+    // 2. Busca os dados atualizados do usuário para gerar novo token
+    const [usuarios] = await banco.query(
+      "SELECT * FROM tb_usuario WHERE id = ?",
+      [usuarioLogado.id],
+    );
+    const usuarioAtualizado = usuarios[0];
+
+    // 3. Gera um NOVO TOKEN (com o cargo "prestador" dentro dele)
+    const novoToken = tokenService.gerarToken(usuarioAtualizado);
+
+    res.status(200).json({
+      mensagem: "Parabéns! Agora você é um prestador.",
+      token: novoToken,
+      usuario: {
+        id: usuarioAtualizado.id,
+        nome: usuarioAtualizado.nome_usuario,
+        tipo_usuario: "prestador",
+      },
+    });
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro ao atualizar perfil." });
+  }
 };

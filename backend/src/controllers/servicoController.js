@@ -64,6 +64,57 @@ exports.listarServicos = async (req, res) => {
   }
 };
 
+exports.buscarPorId = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [servicos] = await banco.query(
+      `
+            SELECT s.*, u.nome_usuario, u.email, u.telefone 
+            FROM tb_servico s
+            JOIN tb_usuario u ON s.id_usuario = u.id
+            WHERE s.id = ?
+        `,
+      [id],
+    );
+
+    if (servicos.length === 0) {
+      return res.status(404).json({ erro: "Serviço não encontrado." });
+    }
+
+    res.status(200).json(servicos[0]);
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro ao buscar detalhes do serviço." });
+  }
+};
+
+// BUSCAR UM SERVIÇO ESPECÍFICO (Público)
+exports.buscarPorId = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [servicos] = await banco.query(
+      `
+            SELECT s.*, u.nome_usuario, u.email, u.telefone 
+            FROM tb_servico s
+            JOIN tb_usuario u ON s.id_usuario = u.id
+            WHERE s.id = ?
+        `,
+      [id],
+    );
+
+    if (servicos.length === 0) {
+      return res.status(404).json({ erro: "Serviço não encontrado." });
+    }
+
+    res.status(200).json(servicos[0]);
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro ao buscar detalhes do serviço." });
+  }
+};
+
 // EDITAR SERVIÇO
 exports.editarServico = async (req, res) => {
   const { id } = req.params; // Pega o ID da URL (ex: /servicos/1)

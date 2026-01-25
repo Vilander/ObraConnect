@@ -90,3 +90,31 @@ exports.listarAvaliacoes = async (req, res) => {
     res.status(500).json({ erro: "Erro ao buscar avaliações." });
   }
 };
+
+// LISTAR AVALIAÇÕES RECEBIDAS (Dashboard do Prestador)
+exports.listarRecebidas = async (req, res) => {
+  const usuarioLogado = req.usuario;
+
+  try {
+    // Busca avaliações onde os serviços pertencem ao usuário logado
+    const [avaliacoes] = await banco.query(
+      `
+            SELECT a.*, 
+                   u_avaliador.nome_usuario as nome_avaliador, 
+                   s.titulo as nome_servico,
+                   s.imagem_url as imagem_servico
+            FROM tb_avaliacao a
+            JOIN tb_servico s ON a.id_servico = s.id
+            JOIN tb_usuario u_avaliador ON a.id_usuario = u_avaliador.id
+            WHERE s.id_usuario = ?
+            ORDER BY a.data_avaliacao DESC
+        `,
+      [usuarioLogado.id],
+    );
+
+    res.status(200).json(avaliacoes);
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ erro: "Erro ao buscar suas avaliações." });
+  }
+};

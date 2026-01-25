@@ -6,6 +6,7 @@ const upload = require("../config/upload");
 
 // Rota Pública: Qualquer um pode ver os serviços
 router.get("/", servicoController.listarServicos);
+router.get("/:id", servicoController.buscarPorId);
 
 // Rota Protegida: Apenas quem tem token pode tentar criar
 // (E o controller verifica se é prestador)

@@ -33,7 +33,7 @@ export function Inicio({ navegarPara, estaLogado }) {
         const resposta = await fetch('http://localhost:3001/api/servicos');
         const dados = await resposta.json();
 
-        // Mapeia os dados do Banco (snake_case) para o Frontend (camelCase)
+        // Mapeia os dados do Banco  para o Frontend
         const servicosFormatados = dados.map(item => ({
           id: item.id,
           nomePrestador: item.nome_prestador, // Banco: nome_prestador -> Front: nomePrestador
@@ -61,7 +61,7 @@ export function Inicio({ navegarPara, estaLogado }) {
     buscarServicos();
   }, []);
 
-  // Filtros (Mantido igual)
+  // Filtros 
   useEffect(() => {
     let filtrados = servicos;
 

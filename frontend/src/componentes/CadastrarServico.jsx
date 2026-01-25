@@ -1,19 +1,24 @@
+import { Upload, CheckCircle, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
 import AlertDialog from './AlertDialog';
 
 export function CadastrarServico({ navegarPara }) {
-  const [dadosFormulario, setDadosFormulario] = useState({
-    nomePrestador: '',
-    descServico: '',
-    email: '',
-    telefoneContato: '',
-    categoriasSelecionadas: []
+  const [loading, setLoading] = useState(false);
+  const [dialog, setDialog] = useState({ aberto: false, mensagem: '' });
+  
+  // Estado do formulário
+  const [formulario, setFormulario] = useState({
+    titulo: '',
+    descricao: '',
+    categoria: '',
+    telefone: '', 
   });
+  
+  const [imagemSelecionada, setImagemSelecionada] = useState(null);
+  const [previewImagem, setPreviewImagem] = useState(null);
 
-  const [dialogState, setDialogState] = useState({ aberto: false, mensagem: '', sucesso: false });
-
-  const categoriasDisponiveis = [
+  // Lista de categorias sincronizada com o Banco de Dados
+  const categorias = [
     'Arquiteto(a)', 'Armador(a) de Ferragens', 'Azulejista / Pisagista', 'Bombeiro(a) Hidráulico / Encanador(a)',
     'Calheiro(a)', 'Carpinteiro(a)', 'Desentupidor(a)', 'Designer de Interiores', 'Eletricista',
     'Engenheiro(a) Civil', 'Gesseiro(a)', 'Impermeabilizador(a)', 'Instalador(a) de Ar Condicionado',
@@ -23,205 +28,198 @@ export function CadastrarServico({ navegarPara }) {
     'Pedreiro(a)', 'Pintor(a)', 'Serralheiro(a)', 'Técnico(a) em Edificações', 'Topógrafo(a)', 'Vidraceiro(a)'
   ];
 
-  const alternarCategoria = (categoria) => {
-    setDadosFormulario(anterior => ({
-      ...anterior,
-      categoriasSelecionadas: anterior.categoriasSelecionadas.includes(categoria)
-        ? anterior.categoriasSelecionadas.filter(c => c !== categoria)
-        : [...anterior.categoriasSelecionadas, categoria]
-    }));
+  // Manipula a seleção do arquivo
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImagemSelecionada(file);
+      // Cria uma URL temporária para mostrar a foto na tela antes de enviar
+      setPreviewImagem(URL.createObjectURL(file));
+    }
   };
 
-  const submeterFormulario = async (e) => {
+  // Envia os dados para o Backend
+  const submeterServico = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    if (dadosFormulario.categoriasSelecionadas.length === 0) {
-      setDialogState({
-        aberto: true,
-        mensagem: 'Por favor, selecione pelo menos uma categoria',
-        sucesso: false
-      });
+    // 1. Validação simples
+    if (!formulario.titulo || !formulario.descricao || !formulario.categoria) {
+      setDialog({ aberto: true, mensagem: "Preencha todos os campos obrigatórios." });
+      setLoading(false);
       return;
     }
 
-    setDialogState({
-      aberto: true,
-      mensagem: 'Serviço cadastrado com sucesso!',
-      sucesso: true
-    });
-  };
+    // 2. Prepara o FormData (Pacote para envio de arquivos)
+    const formData = new FormData();
+    formData.append('titulo', formulario.titulo);
+    formData.append('descricao', formulario.descricao);
+    
+    // Nota: O backend atual ainda não salva a categoria na tabela de relacionamento,
+    // mas vamos enviar para deixar pronto ou você pode adicionar ao texto da descrição se quiser.
+    // Por enquanto, o backend ignora este campo se não tiver lógica para ele.
+    formData.append('categoria', formulario.categoria); 
 
-  const handleCloseDialog = () => {
-    setDialogState({ ...dialogState, aberto: false });
-    if (dialogState.sucesso) {
-      navegarPara('inicio');
+    if (imagemSelecionada) {
+      formData.append('imagem', imagemSelecionada);
+    }
+
+    const token = localStorage.getItem('token');
+
+    try {
+      const resposta = await fetch('http://localhost:3001/api/servicos', {
+        method: 'POST',
+        headers: {
+          // IMPORTANTE: Quando usamos FormData, NÃO definimos 'Content-Type'. 
+          // O navegador faz isso sozinho. Apenas o Token é necessário.
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const dados = await resposta.json();
+
+      if (resposta.ok) {
+        setDialog({ aberto: true, mensagem: "Serviço cadastrado com sucesso!" });
+        // Limpa o formulário
+        setFormulario({ titulo: '', descricao: '', categoria: '', telefone: '' });
+        setImagemSelecionada(null);
+        setPreviewImagem(null);
+        
+        // Opcional: Redirecionar para a Home após uns segundos
+        setTimeout(() => navegarPara('inicio'), 2000);
+      } else {
+        setDialog({ aberto: true, mensagem: dados.erro || "Erro ao cadastrar serviço." });
+      }
+    } catch (erro) {
+      console.error(erro);
+      setDialog({ aberto: true, mensagem: "Erro de conexão com o servidor." });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-vh-100 py-4 px-3">
-      <div className="container" style={{ maxWidth: '900px' }}>
+    <div className="bg-light min-vh-100 p-4">
+      <div className="container" style={{ maxWidth: '800px' }}>
+        
         {/* Botão Voltar */}
-        <button
-          onClick={() => navegarPara('inicio')}
-          className="btn btn-light d-flex align-items-center gap-2 mb-4"
+        <button 
+          onClick={() => navegarPara('inicio')} 
+          className="btn btn-link text-decoration-none text-azul-marinho ps-0 mb-3 d-flex align-items-center gap-2"
         >
           <ArrowLeft size={20} />
-          <span>Voltar</span>
+          Voltar
         </button>
 
-        {/* Container do Formulário */}
-        <div className="card shadow-lg">
-          <div className="card-body p-4 p-md-5">
-            <h1 className="text-azul-marinho mb-2">
-              Cadastrar Novo Serviço
-            </h1>
-            <p className="text-cinza mb-4">
-              Preencha as informações abaixo para cadastrar seu serviço no marketplace
-            </p>
-
-            <form onSubmit={submeterFormulario}>
-              {/* Nome do Prestador */}
+        <div className="card shadow border-0">
+          <div className="card-body p-5">
+            <h2 className="text-azul-marinho fw-bold mb-4">Anuncie seu Serviço</h2>
+            
+            <form onSubmit={submeterServico}>
+              {/* Título */}
               <div className="mb-4">
-                <label className="form-label text-azul-marinho">
-                  Nome do Prestador *
-                </label>
+                <label className="form-label fw-bold text-azul-marinho">Título do Anúncio *</label>
                 <input
                   type="text"
-                  value={dadosFormulario.nomePrestador}
-                  onChange={(e) => setDadosFormulario({ ...dadosFormulario, nomePrestador: e.target.value })}
-                  className="form-control py-3 border-2 border-azul-claro"
-                  placeholder="Ex: João Silva Construções"
+                  className="form-control py-3"
+                  placeholder="Ex: Reforma de Telhados, Eletricista 24h..."
+                  value={formulario.titulo}
+                  onChange={(e) => setFormulario({...formulario, titulo: e.target.value})}
                   required
                 />
               </div>
 
-              {/* Categorias */}
+              {/* Categoria */}
               <div className="mb-4">
-                <label className="form-label text-azul-marinho mb-2">
-                  Categorias de Serviço *
-                </label>
-                <p className="small text-cinza mb-3">
-                  Selecione uma ou mais categorias que você atende
-                </p>
-                <div className="row g-2">
-                  {categoriasDisponiveis.map((categoria) => (
-                    <div key={categoria} className="col-12 col-sm-6 col-md-4">
-                      <button
-                        type="button"
-                        onClick={() => alternarCategoria(categoria)}
-                        className={`btn w-100 py-2 text-start ${dadosFormulario.categoriasSelecionadas.includes(categoria)
-                          ? 'btn-laranja shadow'
-                          : 'btn-outline-secondary'
-                          }`}
-                      >
-                        {dadosFormulario.categoriasSelecionadas.includes(categoria) && (
-                          <span className="me-1">✓</span>
-                        )}
-                        {categoria}
-                      </button>
-                    </div>
+                <label className="form-label fw-bold text-azul-marinho">Categoria *</label>
+                <select 
+                  className="form-select py-3"
+                  value={formulario.categoria}
+                  onChange={(e) => setFormulario({...formulario, categoria: e.target.value})}
+                  required
+                >
+                  <option value="">Selecione uma categoria...</option>
+                  {categorias.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
-                </div>
-                {dadosFormulario.categoriasSelecionadas.length > 0 && (
-                  <div className="mt-3">
-                    <small className="text-cinza">
-                      {dadosFormulario.categoriasSelecionadas.length} categoria(s) selecionada(s)
-                    </small>
-                  </div>
-                )}
+                </select>
               </div>
 
               {/* Descrição */}
               <div className="mb-4">
-                <label className="form-label text-azul-marinho">
-                  Descrição do Serviço *
-                </label>
+                <label className="form-label fw-bold text-azul-marinho">Descrição Detalhada *</label>
                 <textarea
-                  value={dadosFormulario.descServico}
-                  onChange={(e) => setDadosFormulario({ ...dadosFormulario, descServico: e.target.value })}
-                  className="form-control py-3 border-2 border-azul-claro"
-                  rows={5}
-                  placeholder="Descreva seus serviços, experiência, diferenciais, etc."
+                  className="form-control"
+                  rows="5"
+                  placeholder="Descreva sua experiência, tipos de serviço que realiza, regiões que atende..."
+                  value={formulario.descricao}
+                  onChange={(e) => setFormulario({...formulario, descricao: e.target.value})}
                   required
-                />
-                <small className="form-text text-cinza">
-                  Mínimo 50 caracteres. Seja claro e detalhado.
-                </small>
+                ></textarea>
               </div>
 
-              {/* Email */}
+              {/* Upload de Imagem */}
               <div className="mb-4">
-                <label className="form-label text-azul-marinho">
-                  Email para Contato
-                </label>
-                <input
-                  type="email"
-                  value={dadosFormulario.email}
-                  onChange={(e) => setDadosFormulario({ ...dadosFormulario, email: e.target.value })}
-                  className="form-control py-3 border-2 border-azul-claro"
-                  placeholder="seu@email.com"
-                />
-              </div>
-
-              {/* Telefone */}
-              <div className="mb-4">
-                <label className="form-label text-azul-marinho">
-                  Telefone para Contato *
-                </label>
-                <input
-                  type="tel"
-                  value={dadosFormulario.telefoneContato}
-                  onChange={(e) => setDadosFormulario({ ...dadosFormulario, telefoneContato: e.target.value })}
-                  className="form-control py-3 border-2 border-azul-claro"
-                  placeholder="(00) 00000-0000"
-                  required
-                />
-              </div>
-
-              {/* Botões */}
-              <div className="row g-3 pt-3">
-                <div className="col-12 col-md-6">
-                  <button
-                    type="submit"
-                    className="btn btn-laranja w-100 py-3"
-                  >
-                    Cadastrar Serviço
-                  </button>
-                </div>
-                <div className="col-12 col-md-6">
-                  <button
-                    type="button"
-                    onClick={() => navegarPara('inicio')}
-                    className="btn btn-outline-secondary w-100 py-3"
-                  >
-                    Cancelar
-                  </button>
+                <label className="form-label fw-bold text-azul-marinho">Foto do Serviço</label>
+                <div className="border-2 border-dashed border-secondary rounded p-4 text-center bg-light position-relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="position-absolute top-0 start-0 w-100 h-100 opacity-0"
+                    style={{ cursor: 'pointer' }}
+                  />
+                  
+                  {previewImagem ? (
+                    <div className="position-relative d-inline-block">
+                        <img 
+                            src={previewImagem} 
+                            alt="Preview" 
+                            className="img-fluid rounded shadow-sm" 
+                            style={{ maxHeight: '200px' }} 
+                        />
+                        <div className="mt-2 text-success small fw-bold">
+                            <CheckCircle size={16} className="d-inline me-1" />
+                            Imagem selecionada
+                        </div>
+                    </div>
+                  ) : (
+                    <div className="py-3">
+                        <Upload className="mx-auto text-cinza mb-2" size={32} />
+                        <p className="text-cinza mb-0">Clique ou arraste uma foto aqui</p>
+                        <p className="small text-muted">(Opcional, mas recomendado)</p>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Botão de Envio */}
+              <div className="d-grid">
+                <button 
+                  type="submit" 
+                  className="btn btn-laranja py-3 fw-bold d-flex align-items-center justify-content-center gap-2"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                        <Loader2 className="animate-spin" size={20} />
+                        Publicando...
+                    </>
+                  ) : 'Publicar Serviço'}
+                </button>
+              </div>
+
             </form>
           </div>
         </div>
-
-        {/* Caixa de Informações */}
-        <div className="card bg-azul-claro mt-4">
-          <div className="card-body p-4">
-            <h3 className="text-azul-marinho mb-3">Dicas para um bom cadastro:</h3>
-            <ul className="text-cinza mb-0">
-              <li className="mb-2">• Seja específico na descrição dos seus serviços</li>
-              <li className="mb-2">• Mencione sua experiência e qualificações</li>
-              <li className="mb-2">• Informe sobre garantias e diferenciais</li>
-              <li className="mb-2">• Mantenha seus dados de contato atualizados</li>
-              <li>• Responda rapidamente às solicitações de contratação</li>
-            </ul>
-          </div>
-        </div>
-        <AlertDialog
-          aberto={dialogState.aberto}
-          mensagem={dialogState.mensagem}
-          onClose={handleCloseDialog}
-        />
       </div>
+
+      <AlertDialog
+        aberto={dialog.aberto}
+        mensagem={dialog.mensagem}
+        onClose={() => setDialog({ ...dialog, aberto: false })}
+      />
     </div>
   );
 }

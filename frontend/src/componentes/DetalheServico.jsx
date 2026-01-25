@@ -1,401 +1,320 @@
-import { Star, Phone, Mail, Calendar, Heart, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Calendar, MessageSquare, Shield, CheckCircle, User, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import AlertDialog from './AlertDialog';
 
 export function DetalheServico({ idServico, navegarPara, estaLogado }) {
   const [servico, setServico] = useState(null);
   const [avaliacoes, setAvaliacoes] = useState([]);
-  const [mostrarFormularioAvaliacao, setMostrarFormularioAvaliacao] = useState(false);
-  const [ehFavorito, setEhFavorito] = useState(false);
+  const [carregando, setCarregando] = useState(true);
 
-  // Estados para Dialog
-  const [dialog, setDialog] = useState({ aberto: false, mensagem: '', acaoAposFechar: null });
-
+  // Estado para nova avaliação
   const [novaAvaliacao, setNovaAvaliacao] = useState({
-    notaPreco: 5,
-    notaTempoExecucao: 5,
-    notaHigiene: 5,
-    notaEducacao: 5,
+    nota_preco: 5,
+    nota_tempo: 5,
+    nota_higiene: 5,
+    nota_educacao: 5,
     comentario: ''
   });
+  const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
 
-  const abrirDialog = (msg, callback = null) => {
-    setDialog({ aberto: true, mensagem: msg, acaoAposFechar: callback });
-  };
+  // Estado Dialog
+  const [dialog, setDialog] = useState({ aberto: false, mensagem: '' });
 
-  const fecharDialog = () => {
-    setDialog({ ...dialog, aberto: false });
-    if (dialog.acaoAposFechar) {
-      dialog.acaoAposFechar();
-    }
-  };
-
+  // --- 1. BUSCAR DADOS DO SERVIÇO E AVALIAÇÕES ---
   useEffect(() => {
-    // Mock de dados para demonstração
-    const servicoMock = {
-      id: idServico,
-      nomePrestador: 'João Silva',
-      descServico: 'Serviços de alvenaria, construção e reforma. Experiência de 15 anos no mercado. Realizo obras completas, construção de muros, calçadas, pequenos reparos e muito mais. Trabalho com qualidade e pontualidade garantidas.',
-      categorias: ['Pedreiro', 'Reformas'],
-      imagem: 'https://images.unsplash.com/photo-1672748341520-6a839e6c05bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb25zdHJ1Y3Rpb24lMjB3b3JrZXJ8ZW58MXx8fHwxNzY0Mjg1OTAwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-      notaMedia: 4.8,
-      totalAvaliacoes: 24,
-      telefoneContato: '(11) 98765-4321',
-      email: 'joao.silva@email.com',
-      dataCadastro: '2024-01-15'
+    const carregarDados = async () => {
+      try {
+        // Busca Serviço
+        const respServico = await fetch(`http://localhost:3001/api/servicos/${idServico}`);
+        const dadosServico = await respServico.json();
+
+        if (!respServico.ok) throw new Error(dadosServico.erro);
+
+        // Busca Avaliações
+        const respAvaliacoes = await fetch(`http://localhost:3001/api/avaliacoes/servico/${idServico}`);
+        const dadosAvaliacoes = await respAvaliacoes.json();
+
+        setServico({
+          ...dadosServico,
+          // Mapeia snake_case do banco para camelCase se necessário, ou usa direto
+          nomePrestador: dadosServico.nome_usuario || dadosServico.nome_prestador,
+          imagem: dadosServico.imagem_url,
+          notaMedia: Number(dadosServico.nota_media),
+          totalAvaliacoes: dadosServico.total_avaliacoes,
+          descricao: dadosServico.desc_servico
+        });
+
+        setAvaliacoes(dadosAvaliacoes);
+
+      } catch (erro) {
+        console.error("Erro:", erro);
+        setDialog({ aberto: true, mensagem: "Erro ao carregar detalhes do serviço." });
+      } finally {
+        setCarregando(false);
+      }
     };
 
-    const avaliacoesMock = [
-      {
-        id: 1,
-        idUsuario: 2,
-        nomeUsuario: 'Maria Santos',
-        notaPreco: 5,
-        notaTempoExecucao: 5,
-        notaHigiene: 4,
-        notaEducacao: 5,
-        comentario: 'Excelente profissional! Fez a reforma da minha casa com muita qualidade e no prazo combinado.',
-        dataAvaliacao: '2024-11-20'
-      },
-      {
-        id: 2,
-        idUsuario: 3,
-        nomeUsuario: 'Pedro Costa',
-        notaPreco: 4,
-        notaTempoExecucao: 5,
-        notaHigiene: 5,
-        notaEducacao: 5,
-        comentario: 'Muito bom! Recomendo.',
-        dataAvaliacao: '2024-11-15'
-      }
-    ];
-
-    setServico(servicoMock);
-    setAvaliacoes(avaliacoesMock);
+    if (idServico) {
+      carregarDados();
+    }
   }, [idServico]);
 
-  const realizarContratacao = async () => {
-    if (!estaLogado) {
-      abrirDialog('Você precisa estar logado para contratar um serviço', () => navegarPara('login'));
-      return;
-    }
 
-    abrirDialog('Solicitação de contratação enviada! O profissional entrará em contato em breve.');
-  };
-
+  // --- 2. ENVIAR NOVA AVALIAÇÃO ---
   const submeterAvaliacao = async (e) => {
     e.preventDefault();
-
     if (!estaLogado) {
-      abrirDialog('Você precisa estar logado para avaliar um serviço');
+      setDialog({ aberto: true, mensagem: "Você precisa estar logado para avaliar." });
+      navegarPara('login');
       return;
     }
 
-    abrirDialog('Avaliação enviada com sucesso!');
-    setMostrarFormularioAvaliacao(false);
-    setNovaAvaliacao({
-      notaPreco: 5,
-      notaTempoExecucao: 5,
-      notaHigiene: 5,
-      notaEducacao: 5,
-      comentario: ''
-    });
-  };
+    setEnviandoAvaliacao(true);
+    const token = localStorage.getItem('token');
 
-  const alternarFavorito = () => {
-    if (!estaLogado) {
-      abrirDialog('Você precisa estar logado para favoritar serviços');
-      return;
+    try {
+      const resposta = await fetch('http://localhost:3001/api/avaliacoes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id_servico: idServico,
+          ...novaAvaliacao
+        })
+      });
+
+      const dados = await resposta.json();
+
+      if (resposta.ok) {
+        setDialog({ aberto: true, mensagem: "Avaliação enviada com sucesso!" });
+        setNovaAvaliacao({ nota_preco: 5, nota_tempo: 5, nota_higiene: 5, nota_educacao: 5, comentario: '' });
+        // Recarrega as avaliações para aparecer a nova
+        const respNovas = await fetch(`http://localhost:3001/api/avaliacoes/servico/${idServico}`);
+        setAvaliacoes(await respNovas.json());
+      } else {
+        setDialog({ aberto: true, mensagem: dados.erro || "Erro ao enviar avaliação." });
+      }
+    } catch (erro) {
+      setDialog({ aberto: true, mensagem: "Erro de conexão." });
+    } finally {
+      setEnviandoAvaliacao(false);
     }
-    setEhFavorito(!ehFavorito);
   };
 
-  const calcularNotaMedia = (av) => {
-    return ((av.notaPreco + av.notaTempoExecucao + av.notaHigiene + av.notaEducacao) / 4).toFixed(1);
-  };
+  if (carregando) return (
+    <div className="text-center py-5">
+      <Loader2 className="animate-spin mx-auto text-laranja-principal" size={48} />
+    </div>
+  );
 
-  if (!servico) {
-    return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center">
-        <p className="text-cinza">Carregando...</p>
-      </div>
-    );
-  }
+  if (!servico) return <div className="text-center py-5">Serviço não encontrado.</div>;
 
   return (
-    <div className="min-vh-100">
-      {/* Botão Voltar */}
-      <div className="container py-3">
-        <button
-          onClick={() => navegarPara('inicio')}
-          className="btn btn-light d-flex align-items-center gap-2"
-        >
-          <ArrowLeft size={20} />
-          <span>Voltar</span>
-        </button>
+    <div className="bg-light min-vh-100 pb-5">
+      {/* Cabeçalho da Página */}
+      <div className="bg-azul-marinho text-white py-4 shadow-sm">
+        <div className="container">
+          <button
+            onClick={() => navegarPara('inicio')}
+            className="btn btn-link text-white text-decoration-none p-0 mb-3 d-flex align-items-center gap-2 hover-opacity"
+          >
+            <ArrowLeft size={20} />
+            Voltar para busca
+          </button>
+          <div className="row align-items-center">
+            <div className="col-md-8">
+              <h1 className="fw-bold mb-2">{servico.nomePrestador}</h1>
+              <div className="d-flex flex-wrap gap-3 text-white-50">
+                <div className="d-flex align-items-center gap-1">
+                  <MapPin size={18} />
+                  <span>Americana - SP</span>
+                </div>
+                <div className="d-flex align-items-center gap-1">
+                  <Star size={18} className="text-amarelo" fill="currentColor" />
+                  <span className="text-white fw-bold">{servico.notaMedia?.toFixed(1) || "0.0"}</span>
+                  <span>({servico.totalAvaliacoes} avaliações)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Cabeçalho do Serviço */}
-      <section className="container pb-4">
+      <div className="container mt-4">
         <div className="row g-4">
-          {/* Imagem */}
-          <div className="col-12 col-md-6">
-            <div className="position-relative">
-              <img
-                src={servico.imagem}
-                alt={servico.nomePrestador}
-                className="w-100 rounded shadow object-cover"
-                style={{ height: '400px' }}
-              />
-              <button
-                onClick={alternarFavorito}
-                className="btn btn-light rounded-circle position-absolute shadow d-flex align-items-center justify-content-center"
-                style={{ top: '1rem', right: '1rem', width: '50px', height: '50px', padding: '0' }}
-              >
-                <Heart
-                  size={24}
-                  fill={ehFavorito ? 'var(--vermelho-escuro)' : 'none'}
-                  color={ehFavorito ? 'var(--vermelho-escuro)' : 'var(--cinza)'}
+          {/* Coluna Esquerda - Informações Principais */}
+          <div className="col-lg-8">
+            {/* Cartão de Descrição */}
+            <div className="card shadow-sm border-0 mb-4">
+              <div className="card-body p-4">
+                <h3 className="h5 text-azul-marinho fw-bold mb-3">Sobre o Serviço</h3>
+                <img
+                  src={servico.imagem || 'https://via.placeholder.com/800x400?text=Servi%C3%A7o'}
+                  alt="Foto do serviço"
+                  className="img-fluid rounded mb-3 w-100 object-cover"
+                  style={{ maxHeight: '400px' }}
+                  onError={(e) => { e.target.src = 'https://via.placeholder.com/800x400?text=Sem+Imagem'; }}
                 />
-              </button>
+                <p className="text-cinza" style={{ whiteSpace: 'pre-line' }}>
+                  {servico.descricao}
+                </p>
+              </div>
+            </div>
+
+            {/* Seção de Avaliações */}
+            <div className="card shadow-sm border-0">
+              <div className="card-body p-4">
+                <h3 className="h5 text-azul-marinho fw-bold mb-4 d-flex align-items-center gap-2">
+                  <MessageSquare size={20} />
+                  Avaliações de Clientes
+                </h3>
+
+                {avaliacoes.length === 0 ? (
+                  <p className="text-cinza">Este serviço ainda não possui avaliações.</p>
+                ) : (
+                  <div className="d-flex flex-column gap-4">
+                    {avaliacoes.map((av) => (
+                      <div key={av.id} className="border-bottom pb-3">
+                        <div className="d-flex justify-content-between mb-2">
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="bg-azul-claro rounded-circle p-2">
+                              <User size={16} className="text-azul-marinho" />
+                            </div>
+                            <span className="fw-bold text-azul-marinho">
+                              {av.nome_usuario || "Usuário"}
+                            </span>
+                          </div>
+                          <span className="text-cinza small">
+                            {new Date(av.data_avaliacao).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="d-flex gap-2 mb-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={14}
+                              className={i < Math.round((av.nota_preco + av.nota_tempo_execucao + av.nota_higiene + av.nota_educacao) / 4) ? "text-amarelo" : "text-gray-300"}
+                              fill="currentColor"
+                            />
+                          ))}
+                        </div>
+                        <p className="text-cinza mb-0 small">"{av.comentario}"</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Informações */}
-          <div className="col-12 col-md-6">
-            <h1 className="text-azul-marinho">{servico.nomePrestador}</h1>
-
-            <div className="d-flex flex-wrap gap-2 mt-3">
-              {servico.categorias.map((cat) => (
-                <span
-                  key={cat}
-                  className="badge bg-amarelo-ouro text-marrom-escuro fs-6 px-3 py-2"
-                >
-                  {cat}
-                </span>
-              ))}
-            </div>
-
-            <div className="d-flex align-items-center gap-2 mt-3">
-              <Star size={28} fill="var(--amarelo)" color="var(--amarelo)" />
-              <span className="fs-2 text-azul-marinho">
-                {servico.notaMedia.toFixed(1)}
-              </span>
-              <span className="text-cinza">
-                ({servico.totalAvaliacoes} avaliações)
-              </span>
-            </div>
-
-            <div className="mt-4">
-              {servico.telefoneContato && (
-                <div className="d-flex align-items-center gap-3 mb-2">
-                  <Phone size={20} color="var(--laranja-principal)" />
-                  <span className="text-cinza">{servico.telefoneContato}</span>
+          {/* Coluna Direita - Ação e Formulário */}
+          <div className="col-lg-4">
+            {/* Card de Contato */}
+            <div className="card shadow-sm border-0 mb-4 bg-white sticky-top" style={{ top: '20px', zIndex: 1 }}>
+              <div className="card-body p-4">
+                <h3 className="h5 text-azul-marinho fw-bold mb-3">Interessado?</h3>
+                <button className="btn btn-whatsapp w-100 py-3 mb-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                  <MessageSquare size={20} />
+                  Conversar no WhatsApp
+                </button>
+                <div className="d-flex align-items-center gap-2 text-cinza small justify-content-center">
+                  <Shield size={16} />
+                  <span>Profissional verificado</span>
                 </div>
-              )}
-              {servico.email && (
-                <div className="d-flex align-items-center gap-3 mb-2">
-                  <Mail size={20} color="var(--laranja-principal)" />
-                  <span className="text-cinza">{servico.email}</span>
-                </div>
-              )}
-              <div className="d-flex align-items-center gap-3">
-                <Calendar size={20} color="var(--laranja-principal)" />
-                <span className="text-cinza">
-                  Membro desde {new Date(servico.dataCadastro).toLocaleDateString('pt-BR')}
-                </span>
               </div>
             </div>
 
-            <button
-              onClick={realizarContratacao}
-              className="btn btn-laranja w-100 py-3 mt-4 fs-5"
-            >
-              Contratar Serviço
-            </button>
+            {/* Formulário de Avaliação */}
+            {estaLogado ? (
+              <div className="card shadow-sm border-0">
+                <div className="card-body p-4">
+                  <h4 className="h6 text-azul-marinho fw-bold mb-3">Avalie este profissional</h4>
+                  <form onSubmit={submeterAvaliacao}>
+                    <div className="mb-3">
+                      <label className="form-label small">Seu comentário</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={novaAvaliacao.comentario}
+                        onChange={(e) => setNovaAvaliacao({ ...novaAvaliacao, comentario: e.target.value })}
+                        required
+                      ></textarea>
+                    </div>
+
+                    {/* Selects simples para as notas*/}
+                    <div className="row g-2 mb-3">
+                      <div className="col-6">
+                        <label className="small">Preço</label>
+                        <select className="form-select form-select-sm"
+                          value={novaAvaliacao.nota_preco}
+                          onChange={e => setNovaAvaliacao({ ...novaAvaliacao, nota_preco: Number(e.target.value) })}>
+                          <option value="5">5 - Excelente</option>
+                          <option value="4">4 - Bom</option>
+                          <option value="3">3 - Regular</option>
+                          <option value="2">2 - Ruim</option>
+                          <option value="1">1 - Péssimo</option>
+                        </select>
+                      </div>
+                      <div className="col-6">
+                        <label className="small">Tempo</label>
+                        <select className="form-select form-select-sm"
+                          value={novaAvaliacao.nota_tempo}
+                          onChange={e => setNovaAvaliacao({ ...novaAvaliacao, nota_tempo: Number(e.target.value) })}>
+                          <option value="5">5 - Rápido</option>
+                          <option value="4">4 - No prazo</option>
+                          <option value="3">3 - Atrasou pouco</option>
+                          <option value="2">2 - Atrasou</option>
+                          <option value="1">1 - Muito lento</option>
+                        </select>
+                      </div>
+                      <div className="col-6">
+                        <label className="small">Higiene</label>
+                        <select className="form-select form-select-sm"
+                          value={novaAvaliacao.nota_higiene}
+                          onChange={e => setNovaAvaliacao({ ...novaAvaliacao, nota_higiene: Number(e.target.value) })}>
+                          <option value="5">5 - Impecável (muito limpo e organizado)</option>
+                          <option value="4">4 - Muito bom (limpo e bem cuidado)</option>
+                          <option value="3">3 - Regular (limpeza aceitável)</option>
+                          <option value="2">2 - Ruim (pouco cuidado com a higiene)</option>
+                          <option value="1">1 - Péssimo (sem higiene adequada)</option>
+                        </select>
+                      </div>
+                      <div className="col-6">
+                        <label className="small">Educação</label>
+                        <select className="form-select form-select-sm"
+                          value={novaAvaliacao.nota_educacao}
+                          onChange={e => setNovaAvaliacao({ ...novaAvaliacao, nota_educacao: Number(e.target.value) })}>
+                          <option value="5">5 - Extremamente educado e cordial</option>
+                          <option value="4">4 - Educado e respeitoso</option>
+                          <option value="3">3 - Educação razoável</option>
+                          <option value="2">2 - Pouco educado</option>
+                          <option value="1">1 - Muito mal-educado</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <button type="submit" className="btn btn-azul-marinho w-100 btn-sm" disabled={enviandoAvaliacao}>
+                      {enviandoAvaliacao ? 'Enviando...' : 'Enviar Avaliação'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <div className="alert alert-info small">
+                Faça login para avaliar este serviço.
+              </div>
+            )}
+
           </div>
         </div>
-
-        {/* Descrição */}
-        <div className="mt-4">
-          <h2 className="text-azul-marinho">Sobre o Serviço</h2>
-          <p className="mt-3 text-cinza">
-            {servico.descServico}
-          </p>
-        </div>
-      </section>
-
-      {/* Avaliações */}
-      <section className="container py-4 border-top">
-        <div className="d-flex align-items-center justify-content-between mb-4">
-          <h2 className="text-azul-marinho mb-0">Avaliações</h2>
-          <button
-            onClick={() => setMostrarFormularioAvaliacao(!mostrarFormularioAvaliacao)}
-            className="btn btn-verde-escuro"
-          >
-            {mostrarFormularioAvaliacao ? 'Cancelar' : 'Avaliar Serviço'}
-          </button>
-        </div>
-
-        {/* Formulário de Avaliação */}
-        {mostrarFormularioAvaliacao && (
-          <form onSubmit={submeterAvaliacao} className="bg-light p-4 rounded mb-4">
-            <h3 className="text-azul-marinho mb-3">
-              Deixe sua avaliação
-            </h3>
-
-            <div className="row g-3 mb-3">
-              <div className="col-12 col-md-6">
-                <label className="form-label text-azul-marinho">
-                  Nota Preço (1-5)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={novaAvaliacao.notaPreco}
-                  onChange={(e) => setNovaAvaliacao({ ...novaAvaliacao, notaPreco: Number(e.target.value) })}
-                  className="form-control border-2 border-azul-claro"
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-6">
-                <label className="form-label text-azul-marinho">
-                  Nota Tempo de Execução (1-5)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={novaAvaliacao.notaTempoExecucao}
-                  onChange={(e) => setNovaAvaliacao({ ...novaAvaliacao, notaTempoExecucao: Number(e.target.value) })}
-                  className="form-control border-2 border-azul-claro"
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-6">
-                <label className="form-label text-azul-marinho">
-                  Nota Higiene (1-5)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={novaAvaliacao.notaHigiene}
-                  onChange={(e) => setNovaAvaliacao({ ...novaAvaliacao, notaHigiene: Number(e.target.value) })}
-                  className="form-control border-2 border-azul-claro"
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-6">
-                <label className="form-label text-azul-marinho">
-                  Nota Educação (1-5)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={novaAvaliacao.notaEducacao}
-                  onChange={(e) => setNovaAvaliacao({ ...novaAvaliacao, notaEducacao: Number(e.target.value) })}
-                  className="form-control border-2 border-azul-claro"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label text-azul-marinho">
-                Comentário
-              </label>
-              <textarea
-                value={novaAvaliacao.comentario}
-                onChange={(e) => setNovaAvaliacao({ ...novaAvaliacao, comentario: e.target.value })}
-                className="form-control border-2 border-azul-claro"
-                rows={4}
-                placeholder="Conte como foi sua experiência..."
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-verde-escuro"
-            >
-              Enviar Avaliação
-            </button>
-          </form>
-        )}
-
-        {/* Lista de Avaliações */}
-        <div className="row g-3">
-          {avaliacoes.length === 0 ? (
-            <p className="text-cinza">Ainda não há avaliações para este serviço.</p>
-          ) : (
-            avaliacoes.map((avaliacao) => (
-              <div key={avaliacao.id} className="col-12">
-                <div className="card shadow-sm p-3">
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="rounded-circle d-flex align-items-center justify-content-center bg-azul-claro" style={{ width: '50px', height: '50px' }}>
-                        <span className="text-azul-marinho">
-                          {avaliacao.nomeUsuario.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="mb-0 text-azul-marinho">{avaliacao.nomeUsuario}</p>
-                        <p className="mb-0 small text-cinza">
-                          {new Date(avaliacao.dataAvaliacao).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="d-flex align-items-center gap-1">
-                      <Star size={20} fill="var(--amarelo)" color="var(--amarelo)" />
-                      <span className="text-azul-marinho">
-                        {calcularNotaMedia(avaliacao)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="row g-2 mb-3">
-                    <div className="col-6 col-md-3">
-                      <div className="text-center p-2 bg-light rounded">
-                        <p className="small text-cinza mb-1">Preço</p>
-                        <p className="mb-0 text-azul-marinho">{avaliacao.notaPreco}/5</p>
-                      </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                      <div className="text-center p-2 bg-light rounded">
-                        <p className="small text-cinza mb-1">Tempo</p>
-                        <p className="mb-0 text-azul-marinho">{avaliacao.notaTempoExecucao}/5</p>
-                      </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                      <div className="text-center p-2 bg-light rounded">
-                        <p className="small text-cinza mb-1">Higiene</p>
-                        <p className="mb-0 text-azul-marinho">{avaliacao.notaHigiene}/5</p>
-                      </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                      <div className="text-center p-2 bg-light rounded">
-                        <p className="small text-cinza mb-1">Educação</p>
-                        <p className="mb-0 text-azul-marinho">{avaliacao.notaEducacao}/5</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {avaliacao.comentario && (
-                    <p className="text-cinza mb-0">{avaliacao.comentario}</p>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
+      </div>
 
       <AlertDialog
         aberto={dialog.aberto}
         mensagem={dialog.mensagem}
-        onClose={fecharDialog}
+        onClose={() => setDialog({ ...dialog, aberto: false })}
       />
     </div>
   );

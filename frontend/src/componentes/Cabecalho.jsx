@@ -1,157 +1,175 @@
-import { Home, LogIn, LogOut, Menu, Star, Briefcase, X } from 'lucide-react';
+import { Hammer, LogOut, User, HardHat, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import AlertDialog from './AlertDialog';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowRightToBracket } from '@fortawesome/free-solid-svg-icons';
 
 export function Cabecalho({ paginaAtual, navegarPara, estaLogado, realizarLogout, nomeUsuario }) {
-  const [menuMobilAberto, setMenuMobilAberto] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Dialog Genérico (Avisos de erro/sucesso)
+  const [dialog, setDialog] = useState({ aberto: false, mensagem: '', titulo: '' });
+
+  // Estado específico para a Confirmação
+  const [confirmacaoAberto, setConfirmacaoAberto] = useState(false);
+
+  const usuarioSalvo = JSON.parse(localStorage.getItem('usuario') || '{}');
+  const ehPrestador = usuarioSalvo.tipo_usuario === 'prestador' || usuarioSalvo.tipo_usuario === 'admin';
+
+  const solicitarVirarPrestador = () => {
+    setConfirmacaoAberto(true);
+  };
+
+  const executarVirarPrestador = async () => {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      const resposta = await fetch('http://localhost:3001/api/auth/tornar-prestador', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const dados = await resposta.json();
+
+      if (resposta.ok) {
+        localStorage.setItem('token', dados.token);
+        localStorage.setItem('usuario', JSON.stringify(dados.usuario));
+
+        setDialog({
+          aberto: true,
+          titulo: 'Sucesso!',
+          mensagem: "Parabéns! Agora você pode anunciar seus serviços."
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        setDialog({ aberto: true, mensagem: dados.erro || "Erro ao atualizar conta." });
+      }
+    } catch (erro) {
+      setDialog({ aberto: true, mensagem: "Erro de conexão." });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <header className="sticky-top shadow bg-azul-marinho">
-      <div className="container py-3">
-        <div className="d-flex align-items-center justify-content-between">
-          {/* Logo */}
-          <button 
-            onClick={() => navegarPara('inicio')}
-            className="btn d-flex align-items-center gap-2 p-0 border-0 hover-opacity"
-          >
-            <Briefcase size={32} color="var(--amarelo)" />
-            <span className="fs-3 text-branco">
-              ObraConnect
-            </span>
-          </button>
+    <nav className="navbar navbar-expand-lg navbar-dark bg-azul-marinho py-3 sticky-top shadow-sm">
+      <div className="container">
+        {/* Logo */}
+        <a
+          className="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4"
+          href="#"
+          onClick={(e) => { e.preventDefault(); navegarPara('inicio'); }}
+        >
+          <div className="bg-laranja-principal p-2 rounded">
+            <Hammer size={24} className="text-white" />
+          </div>
+          ObraConnect
+        </a>
 
-          {/* Menu Desktop */}
-          <nav className="d-none d-md-flex align-items-center gap-3">
-            <button
-              onClick={() => navegarPara('inicio')}
-              className={`btn d-flex align-items-center gap-2 text-branco ${
-                paginaAtual === 'inicio' ? 'bg-white bg-opacity-10' : ''
-              }`}
-            >
-              <Home size={20} />
-              <span>Início</span>
-            </button>
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="navbar-collapse" id="navbarContent">
+          <ul className="navbar-nav ms-auto align-items-center gap-3">
+            <li className="nav-item">
+              <a
+                className={`nav-link ${paginaAtual === 'inicio' ? 'active fw-bold' : ''}`}
+                href="#"
+                onClick={(e) => { e.preventDefault(); navegarPara('inicio'); }}
+              >
+                Início
+              </a>
+            </li>
 
             {estaLogado ? (
               <>
-                <button
-                  onClick={() => navegarPara('minhas-avaliacoes')}
-                  className={`btn d-flex align-items-center gap-2 text-branco ${
-                    paginaAtual === 'minhas-avaliacoes' ? 'bg-white bg-opacity-10' : ''
-                  }`}
-                >
-                  <Star size={20} />
-                  <span>Minhas Avaliações</span>
-                </button>
+                <li className="nav-item">
+                  {ehPrestador ? (
+                    <button
+                      onClick={() => navegarPara('cadastrar-servico')}
+                      className="btn btn-outline-light d-flex align-items-center gap-2"
+                    >
+                      <HardHat size={18} />
+                      Anunciar Serviço
+                    </button>
+                  ) : (
+                    <button
+                      onClick={solicitarVirarPrestador}
+                      disabled={loading}
+                      className="btn btn-outline-warning d-flex align-items-center gap-2 fw-bold text-amarelo border-amarelo hover-warning"
+                    >
+                      {loading ? <Loader2 className="animate-spin" size={18} /> : <HardHat size={18} />}
+                      Quero ser Prestador
+                    </button>
+                  )}
+                </li>
 
-                <button
-                  onClick={() => navegarPara('cadastrar-servico')}
-                  className="btn btn-laranja"
-                >
-                  Cadastrar Serviço
-                </button>
+                <li className="nav-item dropdown">
+                  <div className="d-flex align-items-center gap-2 text-white border-start border-white-50 ps-3 ms-2">
+                    <div className="d-flex flex-column text-end lh-1">
+                      <span className="small text-white-50">Olá,</span>
+                      <span className="fw-bold">{nomeUsuario}</span>
+                    </div>
+                    <div className="bg-white-50 rounded-circle p-2">
+                      <User size={20} className="text-azul-marinho" />
+                    </div>
+                  </div>
+                </li>
 
-                <div className="d-flex align-items-center gap-3">
-                  <span className="text-amarelo">Olá, {nomeUsuario}</span>
-                  <button
-                    onClick={realizarLogout}
-                    className="btn d-flex align-items-center gap-2 text-branco"
-                  >
+                {/* --- Lógica Condicional: Apenas prestadores veem Minhas Avaliações --- */}
+                {ehPrestador && (
+                  <li className="nav-item">
+                    <button
+                      onClick={() => navegarPara('minhas-avaliacoes')}
+                      className="btn btn-link nav-link"
+                    >
+                      Minhas Avaliações
+                    </button>
+                  </li>
+                )}
+
+                <li className="nav-item">
+                  <button onClick={realizarLogout} className="btn btn-link text-white-50 hover-text-white p-0 ms-2">
                     <LogOut size={20} />
-                    <span>Sair</span>
                   </button>
-                </div>
+                </li>
               </>
             ) : (
-              <button
-                onClick={() => navegarPara('login')}
-                className="btn btn-laranja d-flex align-items-center gap-2"
-              >
-                <LogIn size={20} />
-                <span>Entrar</span>
-              </button>
+              <li className="nav-item ms-2">
+                <button
+                  onClick={() => navegarPara('login')}
+                  className="btn btn-laranja px-4 fw-bold d-flex align-items-center gap-2"
+                >
+                  Login
+                  <FontAwesomeIcon icon={faArrowRightToBracket} />
+                </button>
+              </li>
             )}
-          </nav>
-
-          {/* Botão Menu Mobile */}
-          <button
-            onClick={() => setMenuMobilAberto(!menuMobilAberto)}
-            className="btn d-md-none p-2 text-branco"
-          >
-            {menuMobilAberto ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          </ul>
         </div>
-
-        {/* Menu Mobile */}
-        {menuMobilAberto && (
-          <nav className="d-md-none mt-3 pb-3 d-flex flex-column gap-2">
-            <button
-              onClick={() => {
-                navegarPara('inicio');
-                setMenuMobilAberto(false);
-              }}
-              className={`btn d-flex align-items-center gap-2 text-branco text-start ${
-                paginaAtual === 'inicio' ? 'bg-white bg-opacity-10' : ''
-              }`}
-            >
-              <Home size={20} />
-              <span>Início</span>
-            </button>
-
-            {estaLogado ? (
-              <>
-                <button
-                  onClick={() => {
-                    navegarPara('minhas-avaliacoes');
-                    setMenuMobilAberto(false);
-                  }}
-                  className={`btn d-flex align-items-center gap-2 text-branco text-start ${
-                    paginaAtual === 'minhas-avaliacoes' ? 'bg-white bg-opacity-10' : ''
-                  }`}
-                >
-                  <Star size={20} />
-                  <span>Minhas Avaliações</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    navegarPara('cadastrar-servico');
-                    setMenuMobilAberto(false);
-                  }}
-                  className="btn btn-laranja d-flex align-items-center gap-2"
-                >
-                  Cadastrar Serviço
-                </button>
-
-                <div className="px-3 py-2 text-amarelo">
-                  Olá, {nomeUsuario}
-                </div>
-
-                <button
-                  onClick={() => {
-                    realizarLogout();
-                    setMenuMobilAberto(false);
-                  }}
-                  className="btn d-flex align-items-center gap-2 text-branco text-start"
-                >
-                  <LogOut size={20} />
-                  <span>Sair</span>
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => {
-                  navegarPara('login');
-                  setMenuMobilAberto(false);
-                }}
-                className="btn btn-laranja d-flex align-items-center gap-2"
-              >
-                <LogIn size={20} />
-                <span>Entrar</span>
-              </button>
-            )}
-          </nav>
-        )}
       </div>
-    </header>
+
+      <AlertDialog
+        aberto={confirmacaoAberto}
+        titulo="Tornar-se Prestador?"
+        mensagem="Deseja ativar sua conta para oferecer serviços? Isso é gratuito e permitirá que você crie anúncios."
+        onClose={() => setConfirmacaoAberto(false)}
+        onConfirm={executarVirarPrestador}
+      />
+
+      <AlertDialog
+        aberto={dialog.aberto}
+        titulo={dialog.titulo}
+        mensagem={dialog.mensagem}
+        onClose={() => setDialog({ ...dialog, aberto: false })}
+      />
+    </nav>
   );
 }

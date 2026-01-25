@@ -12,7 +12,7 @@ export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [idServicoSelecionado, setIdServicoSelecionado] = useState(null);
 
-  // --- NOVO: Verifica se já existe um login salvo ao abrir o site ---
+  // Verifica se já existe um login salvo ao abrir o site ---
   useEffect(() => {
     const token = localStorage.getItem('token');
     const usuarioSalvo = localStorage.getItem('usuario');

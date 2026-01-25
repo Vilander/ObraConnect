@@ -1,277 +1,183 @@
-import { Star, ArrowLeft, Trash2 } from 'lucide-react';
+import { Star, MessageSquare, User, Calendar, TrendingUp, ArrowLeft, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import AlertDialog from './AlertDialog';
 
 export function MinhasAvaliacoes({ navegarPara }) {
   const [avaliacoes, setAvaliacoes] = useState([]);
-
-  // Estado para controlar o Dialog
-  const [dialog, setDialog] = useState({
-    aberto: false,
-    mensagem: '',
-    tipo: 'alerta', // 'alerta' ou 'confirmacao'
-    idParaExcluir: null
-  });
+  const [loading, setLoading] = useState(true);
+  const [resumo, setResumo] = useState({ media: 0, total: 0 });
 
   useEffect(() => {
-    // Mock de avaliações para demonstração
-    const avaliacoesMock = [
-      {
-        id: 1,
-        idServico: 1,
-        nomePrestador: 'João Silva',
-        notaPreco: 5,
-        notaTempoExecucao: 5,
-        notaHigiene: 4,
-        notaEducacao: 5,
-        comentario: 'Excelente profissional! Fez a reforma da minha casa com muita qualidade e no prazo combinado.',
-        dataAvaliacao: '2024-11-20'
-      },
-      {
-        id: 2,
-        idServico: 2,
-        nomePrestador: 'Carlos Elétrica',
-        notaPreco: 4,
-        notaTempoExecucao: 5,
-        notaHigiene: 5,
-        notaEducacao: 5,
-        comentario: 'Muito profissional. Resolveu meu problema elétrico rapidamente.',
-        dataAvaliacao: '2024-11-15'
-      },
-      {
-        id: 3,
-        idServico: 3,
-        nomePrestador: 'Marcenaria Santos',
-        notaPreco: 5,
-        notaTempoExecucao: 4,
-        notaHigiene: 5,
-        notaEducacao: 5,
-        comentario: 'Os móveis ficaram lindos! Super recomendo.',
-        dataAvaliacao: '2024-11-10'
-      }
-    ];
+    const buscarAvaliacoes = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const resposta = await fetch('http://localhost:3001/api/avaliacoes/recebidas', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const dados = await resposta.json();
 
-    setAvaliacoes(avaliacoesMock);
+        if (resposta.ok) {
+          setAvaliacoes(dados);
+
+          // Calcular média geral do prestador
+          if (dados.length > 0) {
+            const somaDasMedias = dados.reduce((acc, av) => {
+              const mediaIndividual = (av.nota_preco + av.nota_tempo_execucao + av.nota_higiene + av.nota_educacao) / 4;
+              return acc + mediaIndividual;
+            }, 0);
+            setResumo({
+              media: somaDasMedias / dados.length,
+              total: dados.length
+            });
+          }
+        }
+      } catch (erro) {
+        console.error("Erro ao buscar avaliações", erro);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    buscarAvaliacoes();
   }, []);
 
-  const calcularNotaMedia = (av) => {
-    return ((av.notaPreco + av.notaTempoExecucao + av.notaHigiene + av.notaEducacao) / 4).toFixed(1);
-  };
-
-  // Abre o modal perguntando se quer excluir
-  const solicitarExclusao = (id) => {
-    setDialog({
-      aberto: true,
-      mensagem: 'Tem certeza que deseja excluir esta avaliação?',
-      tipo: 'confirmacao',
-      idParaExcluir: id
-    });
-  };
-
-  // Executa a exclusão de fato
-  const confirmarExclusao = async () => {
-    const id = dialog.idParaExcluir;
-
-    // Remove do estado local
-    setAvaliacoes(avaliacoes.filter(av => av.id !== id));
-
-    // Abre modal de sucesso (reaproveitando o estado, mas limpando o ID)
-    setTimeout(() => {
-      setDialog({
-        aberto: true,
-        mensagem: 'Avaliação excluída com sucesso!',
-        tipo: 'alerta',
-        idParaExcluir: null
-      });
-    }, 100);
-  };
-
-  const fecharDialog = () => {
-    setDialog({ ...dialog, aberto: false });
-  };
+  if (loading) {
+    return (
+      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+        <Loader2 className="animate-spin text-laranja-principal" size={48} />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-vh-100 py-4 px-3">
-      <div className="container" style={{ maxWidth: '1000px' }}>
-        {/* Botão Voltar */}
-        <button
-          onClick={() => navegarPara('inicio')}
-          className="btn btn-light d-flex align-items-center gap-2 mb-4"
-        >
-          <ArrowLeft size={20} />
-          <span>Voltar</span>
-        </button>
+    <div className="min-vh-100 bg-light pb-5">
+      {/* Cabeçalho Dashboard */}
+      <div className="bg-azul-marinho text-white py-5">
+        <div className="container">
+          <button
+            onClick={() => navegarPara('inicio')}
+            className="btn btn-link text-white-50 text-decoration-none p-0 mb-3 d-flex align-items-center gap-2"
+          >
+            <ArrowLeft size={20} />
+            Voltar
+          </button>
 
-        {/* Cabeçalho */}
-        <div className="mb-4">
-          <h1 className="text-azul-marinho">Minhas Avaliações</h1>
-          <p className="text-cinza mt-2">
-            Veja todas as avaliações que você deixou para os profissionais
-          </p>
-        </div>
+          <div className="d-flex justify-content-between align-items-end flex-wrap gap-3">
+            <div>
+              <h1 className="fw-bold mb-2">Minha Reputação</h1>
+              <p className="text-white-50 mb-0">
+                Acompanhe o feedback dos seus clientes
+              </p>
+            </div>
 
-        {/* Lista de Avaliações */}
-        {avaliacoes.length === 0 ? (
-          <div className="card shadow text-center p-5">
-            <Star size={48} color="var(--cinza)" className="mx-auto mb-3" />
-            <h3 className="text-azul-marinho">Nenhuma avaliação ainda</h3>
-            <p className="text-cinza mt-2">
-              Você ainda não avaliou nenhum serviço
-            </p>
-            <button
-              onClick={() => navegarPara('inicio')}
-              className="btn btn-laranja mt-4 mx-auto"
-              style={{ maxWidth: '200px' }}
-            >
-              Explorar Serviços
-            </button>
-          </div>
-        ) : (
-          <div className="row g-3">
-            {avaliacoes.map((avaliacao) => (
-              <div key={avaliacao.id} className="col-12">
-                <div className="card shadow-lg card-hover">
-                  <div className="card-body p-4">
-                    {/* Cabeçalho da Avaliação */}
-                    <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-3 gap-3">
-                      <div className="flex-grow-1">
-                        <button
-                          onClick={() => navegarPara('detalhe-servico', avaliacao.idServico)}
-                          className="btn btn-link p-0 text-start text-decoration-none"
-                        >
-                          <h3 className="text-azul-marinho mb-1">
-                            {avaliacao.nomePrestador}
-                          </h3>
-                        </button>
-                        <p className="small text-cinza mb-0">
-                          Avaliado em {new Date(avaliacao.dataAvaliacao).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="d-flex align-items-center gap-2">
-                          <Star size={24} fill="var(--amarelo)" color="var(--amarelo)" />
-                          <span className="fs-4 text-azul-marinho">
-                            {calcularNotaMedia(avaliacao)}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => solicitarExclusao(avaliacao.id)}
-                          className="btn btn-outline-danger btn-sm"
-                          title="Excluir avaliação"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Notas Detalhadas */}
-                    <div className="row g-2 mb-3">
-                      <div className="col-6 col-md-3">
-                        <div className="text-center p-3 rounded bg-azul-claro">
-                          <p className="small text-azul-marinho mb-1">Preço</p>
-                          <div className="d-flex align-items-center justify-content-center gap-1">
-                            <Star size={16} fill="var(--amarelo)" color="var(--amarelo)" />
-                            <span className="text-azul-marinho">{avaliacao.notaPreco}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-6 col-md-3">
-                        <div className="text-center p-3 rounded bg-azul-claro">
-                          <p className="small text-azul-marinho mb-1">Tempo</p>
-                          <div className="d-flex align-items-center justify-content-center gap-1">
-                            <Star size={16} fill="var(--amarelo)" color="var(--amarelo)" />
-                            <span className="text-azul-marinho">{avaliacao.notaTempoExecucao}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-6 col-md-3">
-                        <div className="text-center p-3 rounded bg-azul-claro">
-                          <p className="small text-azul-marinho mb-1">Higiene</p>
-                          <div className="d-flex align-items-center justify-content-center gap-1">
-                            <Star size={16} fill="var(--amarelo)" color="var(--amarelo)" />
-                            <span className="text-azul-marinho">{avaliacao.notaHigiene}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-6 col-md-3">
-                        <div className="text-center p-3 rounded bg-azul-claro">
-                          <p className="small text-azul-marinho mb-1">Educação</p>
-                          <div className="d-flex align-items-center justify-content-center gap-1">
-                            <Star size={16} fill="var(--amarelo)" color="var(--amarelo)" />
-                            <span className="text-azul-marinho">{avaliacao.notaEducacao}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Comentário */}
-                    {avaliacao.comentario && (
-                      <div className="p-3 rounded bg-light">
-                        <p className="text-cinza mb-0">"{avaliacao.comentario}"</p>
-                      </div>
-                    )}
-
-                    {/* Botão Ver Serviço */}
-                    <div className="mt-3 pt-3 border-top">
-                      <button
-                        onClick={() => navegarPara('detalhe-servico', avaliacao.idServico)}
-                        className="btn btn-link p-0 text-laranja-principal text-decoration-none small"
-                      >
-                        Ver página do serviço →
-                      </button>
-                    </div>
-                  </div>
-                </div>
+            {/* Card de Resumo no Topo */}
+            <div className="bg-white text-azul-marinho rounded p-3 d-flex align-items-center gap-4 shadow-sm">
+              <div className="text-center border-end pe-4">
+                <div className="h2 fw-bold mb-0">{resumo.total}</div>
+                <div className="small text-muted">Avaliações</div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Estatísticas */}
-        {avaliacoes.length > 0 && (
-          <div className="card bg-azul-claro mt-4">
-            <div className="card-body p-4">
-              <h3 className="text-azul-marinho mb-4">Estatísticas</h3>
-              <div className="row g-4 text-center">
-                <div className="col-6 col-md-3">
-                  <p className="display-4 text-azul-marinho mb-1">{avaliacoes.length}</p>
-                  <p className="small text-cinza mb-0">Total de avaliações</p>
+              <div className="text-center">
+                <div className="h2 fw-bold mb-0 text-amarelo d-flex align-items-center gap-2">
+                  {resumo.media.toFixed(1)} <Star fill="currentColor" size={24} />
                 </div>
-                <div className="col-6 col-md-3">
-                  <p className="display-4 text-azul-marinho mb-1">
-                    {(avaliacoes.reduce((acc, av) => acc + parseFloat(calcularNotaMedia(av)), 0) / avaliacoes.length).toFixed(1)}
-                  </p>
-                  <p className="small text-cinza mb-0">Nota média</p>
-                </div>
-                <div className="col-6 col-md-3">
-                  <p className="display-4 text-azul-marinho mb-1">
-                    {(avaliacoes.reduce((acc, av) => acc + av.notaPreco, 0) / avaliacoes.length).toFixed(1)}
-                  </p>
-                  <p className="small text-cinza mb-0">Média preço</p>
-                </div>
-                <div className="col-6 col-md-3">
-                  <p className="display-4 text-azul-marinho mb-1">
-                    {avaliacoes.filter(av => parseFloat(calcularNotaMedia(av)) >= 4.5).length}
-                  </p>
-                  <p className="small text-cinza mb-0">Avaliações 4.5+</p>
-                </div>
+                <div className="small text-muted">Média Geral</div>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* COMPONENTE ALERT DIALOG ADICIONADO */}
-      <AlertDialog
-        aberto={dialog.aberto}
-        mensagem={dialog.mensagem}
-        onClose={fecharDialog}
-        onConfirm={dialog.tipo === 'confirmacao' ? confirmarExclusao : null}
-      />
+      <div className="container mt-n4" style={{ marginTop: '-30px' }}>
+        {avaliacoes.length === 0 ? (
+          <div className="card shadow border-0 p-5 text-center">
+            <div className="mb-3">
+              <MessageSquare size={48} className="text-cinza opacity-50" />
+            </div>
+            <h3 className="text-azul-marinho">Ainda sem avaliações</h3>
+            <p className="text-muted">
+              Assim que você realizar serviços e for avaliado, os comentários aparecerão aqui.
+            </p>
+            <button onClick={() => navegarPara('inicio')} className="btn btn-laranja mt-3">
+              Voltar para o Início
+            </button>
+          </div>
+        ) : (
+          <div className="row g-4">
+            {avaliacoes.map((av) => {
+              const mediaAv = (av.nota_preco + av.nota_tempo_execucao + av.nota_higiene + av.nota_educacao) / 4;
+
+              return (
+                <div key={av.id} className="col-12">
+                  <div className="card shadow-sm border-0 border-start border-4 border-azul-marinho">
+                    <div className="card-body p-4">
+                      <div className="row align-items-center">
+                        {/* Coluna 1: Quem e Quando */}
+                        <div className="col-md-3 mb-3 mb-md-0 border-end-md">
+                          <div className="d-flex align-items-center gap-2 mb-2">
+                            <div className="bg-light rounded-circle p-2">
+                              <User size={20} className="text-azul-marinho" />
+                            </div>
+                            <span className="fw-bold text-azul-marinho">
+                              {av.nome_avaliador}
+                            </span>
+                          </div>
+                          <div className="d-flex align-items-center gap-2 text-muted small">
+                            <Calendar size={14} />
+                            {new Date(av.data_avaliacao).toLocaleDateString()}
+                          </div>
+                          <div className="mt-2 badge bg-azul-claro text-azul-marinho">
+                            Serviço: {av.nome_servico}
+                          </div>
+                        </div>
+
+                        {/* Coluna 2: Notas Detalhadas */}
+                        <div className="col-md-5 mb-3 mb-md-0 px-md-4">
+                          <div className="row g-2 small">
+                            <div className="col-6 d-flex justify-content-between">
+                              <span className="text-muted">Preço:</span>
+                              <span className="fw-bold">{av.nota_preco}</span>
+                            </div>
+                            <div className="col-6 d-flex justify-content-between">
+                              <span className="text-muted">Tempo:</span>
+                              <span className="fw-bold">{av.nota_tempo_execucao}</span>
+                            </div>
+                            <div className="col-6 d-flex justify-content-between">
+                              <span className="text-muted">Higiene:</span>
+                              <span className="fw-bold">{av.nota_higiene}</span>
+                            </div>
+                            <div className="col-6 d-flex justify-content-between">
+                              <span className="text-muted">Educação:</span>
+                              <span className="fw-bold">{av.nota_educacao}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Coluna 3: Comentário e Média Final */}
+                        <div className="col-md-4 text-md-end border-start-md ps-md-4">
+                          <div className="mb-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                size={18}
+                                className={i < Math.round(mediaAv) ? "text-amarelo" : "text-gray-300"}
+                                fill="currentColor"
+                              />
+                            ))}
+                          </div>
+                          <p className="fst-italic text-muted mb-0">
+                            "{av.comentario}"
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
