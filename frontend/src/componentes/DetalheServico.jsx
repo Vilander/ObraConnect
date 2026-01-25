@@ -215,10 +215,24 @@ export function DetalheServico({ idServico, navegarPara, estaLogado }) {
             <div className="card shadow-sm border-0 mb-4 bg-white sticky-top" style={{ top: '20px', zIndex: 1 }}>
               <div className="card-body p-4">
                 <h3 className="h5 text-azul-marinho fw-bold mb-3">Interessado?</h3>
-                <button className="btn btn-whatsapp w-100 py-3 mb-3 d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                  <MessageSquare size={20} />
-                  Conversar no WhatsApp
-                </button>
+
+                {servico.telefone ? (
+                  <a
+                    href={`https://wa.me/55${servico.telefone.replace(/\D/g, '')}?text=Olá, vi seu anúncio "${servico.titulo}" no ObraConnect e gostaria de um orçamento.`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-whatsapp w-100 py-3 mb-3 d-flex align-items-center justify-content-center gap-2 shadow-sm text-white fw-bold"
+                    style={{ backgroundColor: '#25D366', border: 'none' }}
+                  >
+                    <MessageSquare size={20} />
+                    Conversar no WhatsApp
+                  </a>
+                ) : (
+                  <div className="alert alert-warning small text-center">
+                    Telefone não informado pelo prestador.
+                  </div>
+                )}
+
                 <div className="d-flex align-items-center gap-2 text-cinza small justify-content-center">
                   <Shield size={16} />
                   <span>Profissional verificado</span>
