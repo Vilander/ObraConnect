@@ -112,7 +112,7 @@ export function DetalheServico({ idServico, navegarPara, estaLogado }) {
   if (!servico) return <div className="text-center py-5">Serviço não encontrado.</div>;
 
   return (
-    <div className="bg-light min-vh-100 pb-5">
+    <div className="bg-light pb-5" style={{minHeight: '100vh'}}>
       {/* Cabeçalho da Página */}
       <div className="bg-azul-marinho text-white py-4 shadow-sm">
         <div className="container">

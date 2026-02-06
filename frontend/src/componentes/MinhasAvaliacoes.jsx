@@ -44,14 +44,14 @@ export function MinhasAvaliacoes({ navegarPara }) {
 
   if (loading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+      <div className="d-flex align-items-center justify-content-center" style={{minHeight: '100vh'}}>
         <Loader2 className="animate-spin text-laranja-principal" size={48} />
       </div>
     );
   }
 
   return (
-    <div className="min-vh-100 bg-light pb-5">
+    <div className="bg-light pb-5" style={{minHeight: '100vh'}}>
       {/* Cabeçalho Dashboard */}
       <div className="bg-azul-marinho text-white py-5">
         <div className="container">

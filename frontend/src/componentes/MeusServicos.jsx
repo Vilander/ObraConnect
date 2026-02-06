@@ -72,7 +72,7 @@ export function MeusServicos({ navegarPara }) {
     if (loading) return <div className="text-center py-5"><Loader2 className="animate-spin text-laranja-principal" size={48} /></div>;
 
     return (
-        <div className="bg-light min-vh-100 p-4">
+        <div className="bg-light p-4" style={{minHeight: '100vh'}}>
             <div className="container">
 
                 <div className="d-flex justify-content-between align-items-center mb-4">
