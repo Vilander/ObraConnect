@@ -24,7 +24,7 @@ exports.verificarToken = (req, res, next) => {
   }
 
   try {
-    // 3. Verifica se o token é válido usando nossa SENHA SECRETA
+    // 3. Verifica se o token é válido e não expirou
     const verificado = jwt.verify(token, process.env.SEGREDO_JWT);
 
     // 4. Se for válido, coloca os dados do usuário dentro da requisição

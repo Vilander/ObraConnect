@@ -5,7 +5,7 @@ exports.registrarUsuario = async (req, res) => {
   // 1. Recebe os dados do formulário
   const { nome_usuario, email, senha, login, tipo_usuario } = req.body;
 
-  // 2. Validação simples: tudo foi preenchido?
+  // 2. Validação simples de todos os campos obrigatórios
   if (!nome_usuario || !email || !senha || !login) {
     return res.status(400).json({ erro: "Todos os campos são obrigatórios!" });
   }
