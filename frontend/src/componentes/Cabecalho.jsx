@@ -4,6 +4,7 @@ import AlertDialog from './AlertDialog';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRightToBracket } from '@fortawesome/free-solid-svg-icons';
 
+
 export function Cabecalho({ paginaAtual, navegarPara, estaLogado, realizarLogout, nomeUsuario }) {
   const [loading, setLoading] = useState(false);
 
@@ -67,7 +68,7 @@ export function Cabecalho({ paginaAtual, navegarPara, estaLogado, realizarLogout
           onClick={(e) => { e.preventDefault(); navegarPara('inicio'); }}
         >
           <div className="bg-laranja-principal p-2 rounded">
-            <Hammer size={24} className="text-white" />
+            <img width="64" height="64" src="https://img.icons8.com/pastel-glyph/64/worker-male.png" alt="worker-male"/>
           </div>
           ObraConnect
         </a>

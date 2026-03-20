@@ -101,7 +101,7 @@ export function Inicio({ navegarPara, estaLogado }) {
   };
 
   return (
-    <div className="min-vh-100">
+    <div style={{minHeight: '100vh'}}>
       {/* Seção Hero */}
       <section className="py-5 px-3 bg-azul-claro">
         <div className="container">

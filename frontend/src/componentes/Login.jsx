@@ -111,8 +111,8 @@ export function Login({ realizarLogin }) {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center px-3 py-5 bg-azul-claro">
-      <div className="w-100" style={{ maxWidth: '500px' }}>
+    <div className="d-flex align-items-center justify-content-center px-3 py-5 bg-azul-claro" style={{minHeight: '100vh'}}>
+      <div style={{ maxWidth: '500px', width: '100%' }}>
         <div className="bg-white rounded shadow-lg p-4 p-md-5">
           <div className="text-center mb-4">
             <h1 className="text-azul-marinho">

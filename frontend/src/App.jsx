@@ -56,7 +56,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-vh-100">
+    <div style={{minHeight: '100vh'}}>
       {paginaAtual !== 'login' && (
         <Cabecalho
           paginaAtual={paginaAtual}

@@ -5,7 +5,7 @@ exports.registrarUsuario = async (req, res) => {
   // 1. Recebe os dados do formulário
   const { nome_usuario, email, senha, login, tipo_usuario } = req.body;
 
-  // 2. Validação simples: tudo foi preenchido?
+  // 2. Validação simples de todos os campos obrigatórios
   if (!nome_usuario || !email || !senha || !login) {
     return res.status(400).json({ erro: "Todos os campos são obrigatórios!" });
   }
@@ -13,7 +13,7 @@ exports.registrarUsuario = async (req, res) => {
   try {
     // 3. Verifica se usuário já existe
     const [usuariosExistentes] = await banco.query(
-      "SELECT * FROM tb_usuario WHERE email = ? OR login = ?",
+      "SELECT * FROM oc__tb_usuario WHERE email = ? OR login = ?",
       [email, login],
     );
 
@@ -30,7 +30,7 @@ exports.registrarUsuario = async (req, res) => {
 
     // 6. Insere no banco com a senha SEGURA
     const [resultado] = await banco.query(
-      "INSERT INTO tb_usuario (nome_usuario, email, senha, login, tipo_usuario, data_cadastro) VALUES (?, ?, ?, ?, ?, NOW())",
+      "INSERT INTO oc__tb_usuario (nome_usuario, email, senha, login, tipo_usuario, data_cadastro) VALUES (?, ?, ?, ?, ?, NOW())",
       [nome_usuario, email, senhaCriptografada, login, tipoFinal],
     );
 
@@ -53,7 +53,7 @@ exports.login = async (req, res) => {
   try {
     // 1. Busca o usuário pelo login ou email
     const [usuarios] = await banco.query(
-      "SELECT * FROM tb_usuario WHERE login = ? OR email = ?",
+      "SELECT * FROM oc__tb_usuario WHERE login = ? OR email = ?",
       [login, login],
     );
 
@@ -104,13 +104,13 @@ exports.tornarPrestador = async (req, res) => {
   try {
     // 1. Atualiza no Banco
     await banco.query(
-      'UPDATE tb_usuario SET tipo_usuario = "prestador" WHERE id = ?',
+      'UPDATE oc__tb_usuario SET tipo_usuario = "prestador" WHERE id = ?',
       [usuarioLogado.id],
     );
 
     // 2. Busca os dados atualizados do usuário para gerar novo token
     const [usuarios] = await banco.query(
-      "SELECT * FROM tb_usuario WHERE id = ?",
+      "SELECT * FROM oc__tb_usuario WHERE id = ?",
       [usuarioLogado.id],
     );
     const usuarioAtualizado = usuarios[0];

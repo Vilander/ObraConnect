@@ -93,7 +93,7 @@ export function EditarServico({ idServico, navegarPara }) {
     if (loading) return <div className="text-center py-5"><Loader2 className="animate-spin text-laranja-principal" size={48} /></div>;
 
     return (
-        <div className="bg-light min-vh-100 p-4">
+        <div className="bg-light p-4" style={{minHeight: '100vh'}}>
             <div className="container" style={{ maxWidth: '800px' }}>
                 <button onClick={() => navegarPara('meus-servicos')} className="btn btn-link text-decoration-none text-azul-marinho ps-0 mb-3 d-flex align-items-center gap-2">
                     <ArrowLeft size={20} /> Cancelar e Voltar

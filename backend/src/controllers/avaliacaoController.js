@@ -20,7 +20,7 @@ exports.criarAvaliacao = async (req, res) => {
   try {
     // 2. Verifica se o usuário JÁ avaliou este serviço (Evitar duplicidade)
     const [existente] = await banco.query(
-      "SELECT * FROM tb_avaliacao WHERE id_servico = ? AND id_usuario = ?",
+      "SELECT * FROM oc__tb_avaliacao WHERE id_servico = ? AND id_usuario = ?",
       [id_servico, usuarioLogado.id],
     );
 
@@ -30,7 +30,7 @@ exports.criarAvaliacao = async (req, res) => {
 
     // 3. Insere a avaliação
     await banco.query(
-      `INSERT INTO tb_avaliacao 
+      `INSERT INTO oc__tb_avaliacao 
             (id_servico, id_usuario, nota_preco, nota_tempo_execucao, nota_higiene, nota_educacao, comentario, data_avaliacao)
             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
@@ -44,17 +44,17 @@ exports.criarAvaliacao = async (req, res) => {
       ],
     );
 
-    // 4. MÁGICA: Recalcula a média do serviço e atualiza a tabela tb_servico
+    //  Recalcula a média do serviço e atualiza a tabela tb_servico
     // A média é: (soma das 4 notas) / 4
     await banco.query(
       `
-            UPDATE tb_servico SET 
+            UPDATE oc__tb_servico SET 
                 nota_media = (
                     SELECT AVG((nota_preco + nota_tempo_execucao + nota_higiene + nota_educacao) / 4)
                     FROM tb_avaliacao WHERE id_servico = ?
                 ),
                 total_avaliacoes = (
-                    SELECT COUNT(*) FROM tb_avaliacao WHERE id_servico = ?
+                    SELECT COUNT(*) FROM oc__tb_avaliacao WHERE id_servico = ?
                 )
             WHERE id = ?
         `,
@@ -76,8 +76,8 @@ exports.listarAvaliacoes = async (req, res) => {
     const [avaliacoes] = await banco.query(
       `
             SELECT a.*, u.nome_usuario 
-            FROM tb_avaliacao a
-            JOIN tb_usuario u ON a.id_usuario = u.id
+            FROM oc__tb_avaliacao a
+            JOIN oc__tb_usuario u ON a.id_usuario = u.id
             WHERE a.id_servico = ?
             ORDER BY a.data_avaliacao DESC
         `,
@@ -103,9 +103,9 @@ exports.listarRecebidas = async (req, res) => {
                    u_avaliador.nome_usuario as nome_avaliador, 
                    s.titulo as nome_servico,
                    s.imagem_url as imagem_servico
-            FROM tb_avaliacao a
-            JOIN tb_servico s ON a.id_servico = s.id
-            JOIN tb_usuario u_avaliador ON a.id_usuario = u_avaliador.id
+            FROM oc__tb_avaliacao a
+            JOIN oc__tb_servico s ON a.id_servico = s.id
+            JOIN oc__tb_usuario u_avaliador ON a.id_usuario = u_avaliador.id
             WHERE s.id_usuario = ?
             ORDER BY a.data_avaliacao DESC
         `,

@@ -9,8 +9,8 @@ exports.listarServicos = async (req, res) => {
   try {
     const [servicos] = await banco.query(`
       SELECT s.*, u.nome_usuario 
-      FROM tb_servico s
-      JOIN tb_usuario u ON s.id_usuario = u.id
+      FROM oc__tb_servico s
+      JOIN oc__tb_usuario u ON s.id_usuario = u.id
       ORDER BY s.id DESC
     `);
 
@@ -29,8 +29,8 @@ exports.buscarPorId = async (req, res) => {
     const [servicos] = await banco.query(
       `
       SELECT s.*, u.nome_usuario, u.email, u.telefone 
-      FROM tb_servico s
-      JOIN tb_usuario u ON s.id_usuario = u.id
+      FROM oc__tb_servico s
+      JOIN oc__tb_usuario u ON s.id_usuario = u.id
       WHERE s.id = ?
       `,
       [id],
@@ -54,7 +54,7 @@ exports.listarMeusServicos = async (req, res) => {
   try {
     const [servicos] = await banco.query(
       `
-      SELECT * FROM tb_servico 
+      SELECT * FROM oc__tb_servico 
       WHERE id_usuario = ?
       ORDER BY id DESC
       `,
@@ -103,7 +103,7 @@ exports.criarServico = async (req, res) => {
 
   try {
     const [resultado] = await banco.query(
-      `INSERT INTO tb_servico (id_usuario, nome_prestador, titulo, desc_servico, imagem_url, data_cadastro) 
+      `INSERT INTO oc__tb_servico (id_usuario, nome_prestador, titulo, desc_servico, imagem_url, data_cadastro) 
        VALUES (?, ?, ?, ?, ?, NOW())`,
       [usuarioLogado.id, usuarioLogado.nome, titulo, descricao, caminhoImagem],
     );
@@ -128,7 +128,7 @@ exports.editarServico = async (req, res) => {
   try {
     // 1. Verifica existência
     const [servicos] = await banco.query(
-      "SELECT * FROM tb_servico WHERE id = ?",
+      "SELECT * FROM oc__tb_servico WHERE id = ?",
       [id],
     );
 
@@ -144,7 +144,7 @@ exports.editarServico = async (req, res) => {
     }
 
     // 3. Monta Query Dinâmica
-    let sql = "UPDATE tb_servico SET titulo = ?, desc_servico = ?";
+    let sql = "UPDATE oc__tb_servico SET titulo = ?, desc_servico = ?";
     let params = [titulo, descricao];
 
     if (req.file) {
@@ -175,7 +175,7 @@ exports.deletarServico = async (req, res) => {
   try {
     // 1. Verifica existência
     const [servicos] = await banco.query(
-      "SELECT * FROM tb_servico WHERE id = ?",
+      "SELECT * FROM oc__tb_servico WHERE id = ?",
       [id],
     );
 
@@ -194,7 +194,7 @@ exports.deletarServico = async (req, res) => {
     }
 
     // 3. Deleta de verdade (Para garantir que suma da lista)
-    await banco.query("DELETE FROM tb_servico WHERE id = ?", [id]);
+    await banco.query("DELETE FROM oc__tb_servico WHERE id = ?", [id]);
 
     res.status(200).json({ mensagem: "Serviço removido com sucesso!" });
   } catch (erro) {

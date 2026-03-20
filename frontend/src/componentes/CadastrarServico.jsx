@@ -100,7 +100,7 @@ export function CadastrarServico({ navegarPara }) {
   };
 
   return (
-    <div className="bg-light min-vh-100 p-4">
+    <div className="bg-light p-4" style={{minHeight: '100vh'}}>
       <div className="container" style={{ maxWidth: '800px' }}>
         
         {/* Botão Voltar */}
